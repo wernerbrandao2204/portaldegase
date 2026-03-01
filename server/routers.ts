@@ -1122,13 +1122,5 @@ export const appRouter = router({
       return trend;
     }),
    }),
-  media: router({
-    listImages: publicProcedure.query(async () => {
-      return [];
-    }),
-    listDocuments: publicProcedure.query(async () => {
-      return [];
-    }),
-  }),
 });
 export type AppRouter = typeof appRouter;

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 
 interface MenuItem {
   id: number;
@@ -59,8 +59,10 @@ export function DynamicMenu({
 
     if (filteredItems.length === 0) return null;
 
+    const isSubmenu = level > 0;
+
     return (
-      <ul className={level === 0 ? "space-y-1" : "space-y-0 ml-4 mt-1 border-l border-white/20"}>
+      <ul className={isSubmenu ? "space-y-0 ml-2 mt-1 border-l border-white/20 pl-2" : "space-y-1"}>
         {filteredItems.map((item) => {
           const hasChildren = items.some(
             (child) => child.parentId === item.id && child.isActive
@@ -69,30 +71,44 @@ export function DynamicMenu({
           const href = getMenuLink(item);
 
           return (
-            <li key={item.id}>
+            <li key={item.id} className="group">
               <div className="flex items-center gap-1">
                 {hasChildren && (
                   <button
                     onClick={() => toggleExpanded(item.id)}
-                    className="p-1 hover:bg-white/10 rounded transition-colors"
+                    className="p-1 hover:bg-white/10 rounded transition-colors flex-shrink-0"
                     aria-label={isExpanded ? "Recolher submenu" : "Expandir submenu"}
                     aria-expanded={isExpanded}
                   >
-                    <ChevronDown
-                      size={16}
-                      className={`transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                    />
+                    {isSubmenu ? (
+                      <ChevronRight
+                        size={14}
+                        className={`transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                      />
+                    ) : (
+                      <ChevronDown
+                        size={16}
+                        className={`transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                      />
+                    )}
                   </button>
                 )}
-                {!hasChildren && <div className="w-7" />}
+                {!hasChildren && <div className={isSubmenu ? "w-5" : "w-7"} />}
 
                 {item.linkType === "internal" ? (
                   <Link
                     href={href}
                     onClick={onItemClick}
-                    className="flex-1 px-4 py-2 hover:bg-white/10 rounded-md transition-colors block"
+                    className={`flex-1 px-3 py-2 rounded-md transition-all duration-200 block ${
+                      isSubmenu
+                        ? "text-sm hover:bg-white/15 hover:translate-x-0.5"
+                        : "hover:bg-white/10 group-hover:bg-white/5"
+                    }`}
                   >
-                    {item.label}
+                    <span className="flex items-center gap-1">
+                      {item.label}
+                      {hasChildren && !isSubmenu && <span className="text-xs opacity-60">▼</span>}
+                    </span>
                   </Link>
                 ) : (
                   <a
@@ -100,9 +116,17 @@ export function DynamicMenu({
                     target={item.openInNewTab ? "_blank" : "_self"}
                     rel={item.openInNewTab ? "noopener noreferrer" : undefined}
                     onClick={onItemClick}
-                    className="flex-1 px-4 py-2 hover:bg-white/10 rounded-md transition-colors block"
+                    className={`flex-1 px-3 py-2 rounded-md transition-all duration-200 block ${
+                      isSubmenu
+                        ? "text-sm hover:bg-white/15 hover:translate-x-0.5"
+                        : "hover:bg-white/10 group-hover:bg-white/5"
+                    }`}
                   >
-                    {item.label}
+                    <span className="flex items-center gap-1">
+                      {item.label}
+                      {item.openInNewTab && <ExternalLink size={12} className="opacity-60" />}
+                      {hasChildren && !isSubmenu && <span className="text-xs opacity-60">▼</span>}
+                    </span>
                   </a>
                 )}
               </div>

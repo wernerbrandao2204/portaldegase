@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { MarkdownPreview } from "@/components/MarkdownPreview";
 
 function slugify(text: string): string {
   return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -110,8 +111,11 @@ export default function AdminPages() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Conteúdo *</label>
+            <label className="block text-sm font-medium mb-2">Conteúdo *</label>
             <p className="text-xs text-gray-500 mb-2">Use Markdown. Exemplo: ![alt](url) para imagens, [texto](url) para links</p>
+            <div className="mb-2">
+              <MarkdownPreview content={content} />
+            </div>
             <textarea value={content} onChange={(e) => setContent(e.target.value)} className="w-full px-3 py-2 border rounded-md h-64 font-mono text-sm" placeholder="Escreva o conteúdo da página em Markdown..." required />
           </div>
           <div className="flex gap-2 pt-4">

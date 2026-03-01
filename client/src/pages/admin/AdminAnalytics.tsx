@@ -6,7 +6,7 @@ import { trpc } from "@/lib/trpc";
 import { Loader2, TrendingUp, Eye, MessageSquare, Share2 } from "lucide-react";
 
 export default function AdminAnalytics() {
-  const [dateRange, setDateRange] = useState("30days");
+  const [dateRange, setDateRange] = useState<"30days" | "7days" | "90days" | "all">("30days");
 
   const { data: analytics, isLoading } = trpc.analytics.getMetrics.useQuery({ range: dateRange });
   const { data: topPosts } = trpc.analytics.getTopPosts.useQuery({ limit: 10 });
@@ -41,7 +41,7 @@ export default function AdminAnalytics() {
               <Button
                 key={option.value}
                 variant={dateRange === option.value ? "default" : "outline"}
-                onClick={() => setDateRange(option.value)}
+                onClick={() => setDateRange(option.value as "30days" | "7days" | "90days" | "all")}
                 style={dateRange === option.value ? { backgroundColor: "var(--degase-blue-dark)" } : {}}
               >
                 {option.label}
@@ -76,56 +76,9 @@ export default function AdminAnalytics() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <MessageSquare size={16} style={{ color: "var(--degase-gold)" }} />
-                  Comentários
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold" style={{ color: "var(--degase-gold)" }}>
-                  {analytics?.totalComments || 0}
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  +{analytics?.commentsGrowth || 0}% vs período anterior
-                </p>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Share2 size={16} style={{ color: "#1e5a96" }} />
-                  Compartilhamentos
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold" style={{ color: "#1e5a96" }}>
-                  {analytics?.totalShares || 0}
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  +{analytics?.sharesGrowth || 0}% vs período anterior
-                </p>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <TrendingUp size={16} style={{ color: "#5cb85c" }} />
-                  Taxa de Engajamento
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold" style={{ color: "#5cb85c" }}>
-                  {analytics?.engagementRate || 0}%
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {analytics?.engagementTrend || "Estável"}
-                </p>
-              </CardContent>
-            </Card>
+
           </div>
 
           {/* Gráfico de Engajamento */}
@@ -173,35 +126,7 @@ export default function AdminAnalytics() {
             </Card>
           )}
 
-          {/* Distribuição de Engajamento */}
-          {analytics?.engagementDistribution && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Distribuição de Engajamento</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={analytics.engagementDistribution}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, value }) => `${name}: ${value}%`}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {analytics.engagementDistribution.map((entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
+
         </>
       )}
     </div>
