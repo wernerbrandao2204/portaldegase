@@ -109,8 +109,23 @@ export default function AdminAnalytics() {
           {topPosts && topPosts.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Posts Mais Populares</CardTitle>
-                <CardDescription>Top 10 posts por visualizações</CardDescription>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Posts Mais Populares</CardTitle>
+                    <CardDescription>Top 10 posts por visualizações</CardDescription>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => {
+                    const csv = "Título,Visualizações\n" + topPosts.map((p: any) => `\"${p.title}\",${p.views}`).join("\n");
+                    const blob = new Blob([csv], { type: "text/csv" });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `analytics-posts-${new Date().toISOString().split('T')[0]}.csv`;
+                    a.click();
+                  }}>
+                    Exportar CSV
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>

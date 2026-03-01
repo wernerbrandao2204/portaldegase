@@ -14,11 +14,6 @@ export default function NewsDetail() {
     }
   }, [post?.id, recordViewMutation]);
 
-  const { data: tags } = trpc.posts.getTags.useQuery(
-    { postId: post?.id ?? 0 },
-    { enabled: !!post?.id }
-  );
-
   if (isLoading) {
     return (
       <main id="main-content" className="py-8">
@@ -83,15 +78,7 @@ export default function NewsDetail() {
             )}
           </div>
 
-          {tags && tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-6">
-              {tags.map((tag: any) => (
-                <span key={tag.id} className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-50" style={{ color: "var(--degase-blue-dark)" }}>
-                  <Tag size={10} /> {tag.name}
-                </span>
-              ))}
-            </div>
-          )}
+
 
           <div className="prose-degase" dangerouslySetInnerHTML={{ __html: post.content }} />
         </article>
