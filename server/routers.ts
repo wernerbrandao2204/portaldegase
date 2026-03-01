@@ -329,6 +329,9 @@ export const appRouter = router({
       await db.revertPostToVersion(input.postId, input.historyId, ctx.user.id);
       return { success: true };
     }),
+    recordView: publicProcedure.input(z.object({ postId: z.number() })).mutation(async ({ input }) => {
+      return db.recordPostView(input.postId);
+    }),
   }),
 
   pages: router({

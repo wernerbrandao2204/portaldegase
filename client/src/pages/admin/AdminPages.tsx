@@ -101,14 +101,7 @@ export default function AdminPages() {
                 <option value="published">Publicado</option>
               </select>
             </div>
-            <div className="flex items-center gap-2 pt-6">
-              <input type="checkbox" id="showInMenu" checked={showInMenu} onChange={(e) => setShowInMenu(e.target.checked)} />
-              <label htmlFor="showInMenu" className="text-sm">Exibir no menu</label>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Rótulo no Menu</label>
-              <input type="text" value={menuLabel} onChange={(e) => setMenuLabel(e.target.value)} className="w-full px-3 py-2 border rounded-md" />
-            </div>
+
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">Conteúdo *</label>

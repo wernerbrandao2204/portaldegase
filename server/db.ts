@@ -1575,3 +1575,21 @@ export async function getEngagementTrend(range: "7days" | "30days" | "90days" | 
   }));
 }
 
+
+
+export async function recordPostView(postId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const post = await db.query.posts.findFirst({
+    where: eq(posts.id, postId),
+  });
+  
+  if (!post) throw new Error("Post not found");
+  
+  await db.update(posts)
+    .set({ viewCount: (post.viewCount || 0) + 1 })
+    .where(eq(posts.id, postId));
+  
+  return { success: true };
+}

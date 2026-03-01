@@ -1,10 +1,19 @@
-import { trpc } from "@/lib/trpc";
 import { useParams, Link } from "wouter";
+import { useEffect } from "react";
 import { ArrowLeft, Calendar, Eye, Tag, User } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
 export default function NewsDetail() {
   const params = useParams<{ slug: string }>();
   const { data: post, isLoading } = trpc.posts.getBySlug.useQuery({ slug: params.slug || "" });
+  const recordViewMutation = trpc.posts.recordView.useMutation();
+
+  useEffect(() => {
+    if (post?.id) {
+      recordViewMutation.mutate({ postId: post.id });
+    }
+  }, [post?.id, recordViewMutation]);
+
   const { data: tags } = trpc.posts.getTags.useQuery(
     { postId: post?.id ?? 0 },
     { enabled: !!post?.id }
