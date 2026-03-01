@@ -26,7 +26,7 @@ export default function FeaturedDocuments() {
             <div className="h-8 bg-gray-200 rounded w-48 mb-8" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-64 bg-gray-200 rounded-lg" />
+                <div key={i} className="h-40 bg-gray-200 rounded-lg" />
               ))}
             </div>
           </div>
@@ -50,48 +50,29 @@ export default function FeaturedDocuments() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {documents.slice(0, 5).map((doc: any) => (
-            <div
+          {documents.slice(0, 3).map((doc: any) => (
+            <a
               key={doc.id}
-              className="bg-white rounded-lg border hover:shadow-lg transition-shadow overflow-hidden flex flex-col"
+              href={doc.fileUrl}
+              download
+              onClick={() => handleDownload(doc.id)}
+              className="group"
             >
-              <div className="p-6 flex-1 flex flex-col">
-                <div className="mb-3">
-                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                    {doc.category?.name || "Sem Categoria"}
-                  </span>
+              <div className="h-40 rounded-lg p-6 flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:shadow-lg hover:scale-105 cursor-pointer bg-gradient-to-br from-blue-500 to-blue-700 text-white">
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <FileText size={28} className="text-white" />
                 </div>
-
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                    <FileText size={24} className="text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-gray-900 line-clamp-2">{doc.name}</h3>
-                    {doc.description && (
-                      <p className="text-sm text-gray-600 mt-2 line-clamp-2">{doc.description}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-auto">
-                  <p className="text-xs text-gray-500 mb-4">
-                    Tamanho: {formatFileSize(doc.fileSize)}
+                <div className="text-center">
+                  <h3 className="text-white font-semibold text-sm group-hover:font-bold transition-all line-clamp-2">
+                    {doc.name}
+                  </h3>
+                  <p className="text-white/80 text-xs mt-1">
+                    {formatFileSize(doc.fileSize)}
                   </p>
-
-                  <a
-                    href={doc.fileUrl}
-                    download
-                    onClick={() => handleDownload(doc.id)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-white font-medium"
-                    style={{ backgroundColor: "var(--degase-blue-dark)" }}
-                  >
-                    <Download size={16} />
-                    Baixar
-                  </a>
+                  <Download size={14} className="text-white/70 mx-auto mt-2 group-hover:text-white transition-all" />
                 </div>
               </div>
-            </div>
+            </a>
           ))}
         </div>
 
