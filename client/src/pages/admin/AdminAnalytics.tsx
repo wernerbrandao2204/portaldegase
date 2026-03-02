@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { trpc } from "@/lib/trpc";
 import { Loader2, TrendingUp, Eye, Share2, ArrowUp, ArrowDown } from "lucide-react";
+import { ExportPDFButton } from "@/components/ExportPDFButton";
 
 export default function AdminAnalytics() {
   const [dateRange, setDateRange] = useState<"30days" | "7days" | "90days" | "all">("30days");
@@ -44,10 +45,13 @@ export default function AdminAnalytics() {
         </p>
       </div>
 
-      {/* Filtro de Data */}
+      {/* Filtro de Data e Exportação */}
       <Card>
         <CardHeader>
-          <CardTitle>Período</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Período</CardTitle>
+            <ExportPDFButton period={`Últimos ${comparisonDays} dias`} days={comparisonDays} />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">

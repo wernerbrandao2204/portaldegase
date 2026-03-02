@@ -7,6 +7,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { eq } from "drizzle-orm";
 import { mediaLibrary } from "../drizzle/schema";
+import { generateAnalyticsPDF, type AnalyticsReportData } from "./pdf-generator";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "Acesso restrito a administradores" });
@@ -1217,6 +1218,55 @@ export const appRouter = router({
     })).query(async ({ input }) => {
       const data = await db.getEngagementByDay(input.days);
       return data;
+    }),
+  }),
+
+  reports: router({
+    exportAnalyticsPDF: adminProcedure.input(z.object({
+      period: z.string().default('Últimos 30 dias'),
+      days: z.number().default(30),
+    })).query(async ({ input }) => {
+      try {
+        // Coletar todos os dados necessários
+        const sharesByPlatform = await db.getSharesByPlatform(input.days);
+        const conversionRate = await db.getConversionRate(input.days);
+        const performanceComparison = await db.getPerformanceComparison(input.days, input.days);
+        const topPosts = await db.getTopPostsByEngagement(input.days, 10);
+
+        const perfComp = performanceComparison || { current: { views: 0, shares: 0 }, previous: { views: 0, shares: 0 }, comparison: { viewsChange: 0, sharesChange: 0 } };
+        
+        const reportData: AnalyticsReportData = {
+          period: input.period,
+          generatedAt: new Date(),
+          totalViews: conversionRate.totalViews,
+          totalShares: conversionRate.totalShares,
+          conversionRate: conversionRate.conversionRate,
+          sharesByPlatform: sharesByPlatform || [],
+          performanceComparison: perfComp as any,
+          topPosts: (topPosts || []).map(p => ({
+            title: p.title || 'Sem título',
+            views: p.views || 0,
+            shares: p.shares || 0,
+            engagementScore: p.engagementScore || 0,
+          })),
+        };
+
+        // Gerar PDF
+        const pdfBuffer = generateAnalyticsPDF(reportData);
+        const base64 = pdfBuffer.toString('base64');
+
+        return {
+          success: true,
+          data: base64,
+          filename: `analytics-report-${new Date().toISOString().split('T')[0]}.pdf`,
+        };
+      } catch (error) {
+        console.error('Erro ao gerar PDF:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Erro ao gerar relatório em PDF',
+        });
+      }
     }),
   }),
 });

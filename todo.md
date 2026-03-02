@@ -492,3 +492,14 @@
 - [x] Adicionar comparação de desempenho entre períodos
 - [x] Implementar filtros de data avançados
 - [x] Testar dashboard com dados reais
+
+
+## Exportação de Relatórios em PDF
+- [x] Instalar dependências (html2pdf ou similar)
+- [x] Criar função de geração de PDF no backend
+- [x] Adicionar router tRPC para exportar PDF
+- [x] Criar componente de exportação no AdminAnalytics
+- [x] Implementar captura de gráficos para PDF
+- [x] Adicionar informações de data e período no relatório
+- [x] Testar exportação com diferentes navegadores
+- [x] Validar qualidade do PDF gerado
