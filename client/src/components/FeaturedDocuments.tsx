@@ -1,9 +1,16 @@
 import { FileText, Download, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { useState } from "react";
 
 export default function FeaturedDocuments() {
-  const { data: documents, isLoading } = trpc.documents.getFeatured.useQuery();
+  const { data: categories, isLoading: categoriesLoading } = trpc.documents.getCategories.useQuery();
+  const [selectedCategory, setSelectedCategory] = useState<number | undefined>(undefined);
+  
+  const { data: documents, isLoading: documentsLoading } = trpc.documents.getFeaturedByCategory.useQuery(
+    { categoryId: selectedCategory }
+  );
+  
   const recordDownload = trpc.documents.recordDownload.useMutation();
 
   function formatFileSize(bytes: number): string {
@@ -18,12 +25,19 @@ export default function FeaturedDocuments() {
     recordDownload.mutate({ documentId });
   };
 
+  const isLoading = categoriesLoading || documentsLoading;
+
   if (isLoading) {
     return (
       <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-48 mb-8" />
+            <div className="flex gap-2 mb-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-10 bg-gray-200 rounded w-24" />
+              ))}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="h-40 bg-gray-200 rounded-lg" />
@@ -49,8 +63,39 @@ export default function FeaturedDocuments() {
           Acesse os documentos mais importantes e atualizados do DEGASE
         </p>
 
+        {/* Filtros por categoria */}
+        {categories && categories.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-8">
+            <button
+              onClick={() => setSelectedCategory(undefined)}
+              className={`px-4 py-2 rounded-full font-medium transition-all ${
+                selectedCategory === undefined
+                  ? "text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+              style={selectedCategory === undefined ? { backgroundColor: "var(--degase-blue-dark)" } : {}}
+            >
+              Todos
+            </button>
+            {categories.map((category: any) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`px-4 py-2 rounded-full font-medium transition-all ${
+                  selectedCategory === category.id
+                    ? "text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+                style={selectedCategory === category.id ? { backgroundColor: "var(--degase-blue-dark)" } : {}}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {documents.slice(0, 3).map((doc: any) => (
+          {documents.map((doc: any) => (
             <a
               key={doc.id}
               href={doc.fileUrl}

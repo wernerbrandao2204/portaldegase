@@ -1593,3 +1593,41 @@ export async function recordPostView(postId: number) {
   
   return { success: true };
 }
+
+
+export async function getDocumentCategories() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select()
+    .from(documentCategories)
+    .where(eq(documentCategories.isActive, true))
+    .orderBy(asc(documentCategories.sortOrder));
+}
+
+export async function getFeaturedDocumentsByCategory(categoryId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const conditions = [
+    eq(documents.isFeatured, true),
+    eq(documents.isActive, true)
+  ];
+  
+  if (categoryId) {
+    conditions.push(eq(documents.categoryId, categoryId));
+  }
+  
+  return db.select({
+    ...getTableColumns(documents),
+    category: {
+      id: documentCategories.id,
+      name: documentCategories.name,
+    }
+  })
+    .from(documents)
+    .leftJoin(documentCategories, eq(documents.categoryId, documentCategories.id))
+    .where(and(...conditions))
+    .orderBy(asc(documents.sortOrder), desc(documents.createdAt))
+    .limit(3);
+}
