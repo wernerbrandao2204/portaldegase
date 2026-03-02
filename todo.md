@@ -607,3 +607,16 @@
 - [x] Atualizar UI do admin para exibir e editar ordem
 - [x] Atualizar DynamicMenu para ordenar por número crescente (já estava ordenando)
 - [x] Testar funcionalidade completa
+
+
+## Drag-and-Drop para Reordenação de Menu
+- [x] Implementar funcionalidade de drag-and-drop usando @dnd-kit
+- [x] Atualizar router tRPC para suportar reordenação via drag-and-drop
+- [x] Testar reordenação de itens no admin
+- [x] Verificar persistência de ordem no banco de dados
+
+## Submenus de Segundo Nível (Sub-submenus)
+- [x] Permitir que itens de segundo nível tenham filhos (terceiro nível)
+- [x] Atualizar UI do admin para exibir e gerenciar terceiro nível
+- [x] Atualizar DynamicMenu para renderizar terceiro nível
+- [x] Testar submenus de segundo nível no menu público

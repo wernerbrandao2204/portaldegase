@@ -116,7 +116,7 @@ export function DynamicMenu({
                 )}
               </div>
 
-              {hasChildren && (isExpanded || item.isColumnTitle) && renderMenuItems(item.id, level + 1)}
+              {hasChildren && renderMenuItems(item.id, level + 1)}
             </li>
           );
         })}

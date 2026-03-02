@@ -1,13 +1,99 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Plus, Edit2, GripVertical, ChevronRight } from "lucide-react";
+import { Trash2, Edit2, GripVertical, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+function SortableMenuItem({ item, items, onEdit, onDelete, onToggle, isExpanded, level }: any) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    marginLeft: `${level * 24}px`,
+  };
+
+  const hasChildren = items.some((child: any) => child.parentId === item.id);
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div className={`border rounded-lg p-4 mb-3 transition-all ${isDragging ? "bg-blue-100 shadow-lg" : "hover:bg-gray-50"}`}>
+        <div className="flex items-center gap-3">
+          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
+            <GripVertical className="w-5 h-5 text-gray-400 flex-shrink-0" />
+          </div>
+
+          {hasChildren && (
+            <button
+              onClick={() => onToggle(item.id)}
+              className="p-1 hover:bg-gray-200 rounded transition-colors flex-shrink-0"
+              aria-label={isExpanded ? "Recolher" : "Expandir"}
+            >
+              <ChevronRight
+                size={16}
+                className={`transition-transform ${isExpanded ? "rotate-90" : ""}`}
+              />
+            </button>
+          )}
+          {!hasChildren && <div className="w-7 flex-shrink-0" />}
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              {hasChildren && (
+                <span className="text-xs text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded">
+                  CATEGORIA
+                </span>
+              )}
+              <h4 className="font-medium truncate">{item.label}</h4>
+              <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded font-semibold">
+                #{item.sortOrder}
+              </span>
+            </div>
+            <p className="text-sm text-gray-500 truncate">
+              {item.linkType === "internal" ? "Link Interno" : "Link Externo"}
+              {item.linkType === "external" && ` - ${item.externalUrl}`}
+            </p>
+          </div>
+
+          <div className="flex gap-2 flex-shrink-0">
+            <Button variant="outline" size="sm" onClick={() => onEdit(item)}>
+              <Edit2 className="w-4 h-4" />
+            </Button>
+            <Button variant="destructive" size="sm" onClick={() => onDelete(item.id)}>
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminMenu() {
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -15,10 +101,10 @@ export default function AdminMenu() {
   const [formData, setFormData] = useState({
     label: "",
     linkType: "internal" as "internal" | "external",
-    internalPageId: "",
+    internalPageId: "" as string,
     externalUrl: "",
-    parentId: "",
-    sortOrder: "0",
+    parentId: "" as string,
+    sortOrder: "0" as string,
     openInNewTab: false,
     isColumnTitle: false,
   });
@@ -28,17 +114,48 @@ export default function AdminMenu() {
   const createMutation = trpc.menu.create.useMutation();
   const updateMutation = trpc.menu.update.useMutation();
   const deleteMutation = trpc.menu.delete.useMutation();
-  const reorderMutation = trpc.menu.reorder.useMutation();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    try {
+      const items = menuQuery.data || [];
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      // Atualizar sortOrder baseado na nova posição
+      const itemToMove = items[oldIndex];
+      const newSortOrder = newIndex;
+
+      await updateMutation.mutateAsync({
+        id: itemToMove.id,
+        sortOrder: newSortOrder,
+      });
+
+      toast.success("Ordem atualizada");
+      menuQuery.refetch();
+    } catch (error) {
+      toast.error("Erro ao reordenar item");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.label.trim()) {
       toast.error("Label é obrigatório");
       return;
     }
 
-    // Se não é título da coluna, validar campos de link
     if (!formData.isColumnTitle) {
       if (formData.linkType === "internal" && !formData.internalPageId) {
         toast.error("Selecione uma página para links internos");
@@ -52,34 +169,25 @@ export default function AdminMenu() {
     }
 
     try {
+      const payload = {
+        label: formData.label,
+        linkType: formData.linkType,
+        internalPageId: formData.linkType === "internal" ? parseInt(formData.internalPageId) || 0 : 0,
+        externalUrl: formData.linkType === "external" ? formData.externalUrl : "",
+        parentId: formData.parentId ? parseInt(formData.parentId) : undefined,
+        sortOrder: parseInt(formData.sortOrder) || 0,
+        openInNewTab: formData.openInNewTab,
+        isColumnTitle: formData.isColumnTitle,
+      };
+
       if (editingId) {
-        await updateMutation.mutateAsync({
-          id: editingId,
-          label: formData.label,
-          linkType: formData.linkType,
-          internalPageId: formData.internalPageId ? parseInt(formData.internalPageId) : undefined,
-          externalUrl: formData.externalUrl || undefined,
-          parentId: formData.parentId ? parseInt(formData.parentId) : undefined,
-          sortOrder: parseInt(formData.sortOrder) || 0,
-          openInNewTab: formData.openInNewTab,
-          isColumnTitle: formData.isColumnTitle,
-        });
-        toast.success("Item de menu atualizado");
-        setEditingId(null);
+        await updateMutation.mutateAsync({ id: editingId, ...payload });
+        toast.success("Item atualizado");
       } else {
-        await createMutation.mutateAsync({
-          label: formData.label,
-          linkType: formData.linkType,
-          internalPageId: formData.internalPageId ? parseInt(formData.internalPageId) : undefined,
-          externalUrl: formData.externalUrl || undefined,
-          parentId: formData.parentId ? parseInt(formData.parentId) : undefined,
-          sortOrder: parseInt(formData.sortOrder) || 0,
-          openInNewTab: formData.openInNewTab,
-          isColumnTitle: formData.isColumnTitle,
-        });
-        toast.success("Item de menu criado");
+        await createMutation.mutateAsync(payload);
+        toast.success("Item criado");
       }
-      
+
       setFormData({
         label: "",
         linkType: "internal",
@@ -90,9 +198,10 @@ export default function AdminMenu() {
         openInNewTab: false,
         isColumnTitle: false,
       });
+      setEditingId(null);
       menuQuery.refetch();
     } catch (error) {
-      toast.error("Erro ao salvar item de menu");
+      toast.error("Erro ao salvar item");
     }
   };
 
@@ -101,25 +210,13 @@ export default function AdminMenu() {
     setFormData({
       label: item.label,
       linkType: item.linkType,
-      internalPageId: item.internalPageId?.toString() || "",
+      internalPageId: item.internalPageId || "",
       externalUrl: item.externalUrl || "",
-      parentId: item.parentId?.toString() || "",
-      sortOrder: (item.sortOrder || 0).toString(),
-      openInNewTab: item.openInNewTab,
+      parentId: item.parentId ? item.parentId.toString() : "",
+      sortOrder: item.sortOrder?.toString() || "0",
+      openInNewTab: item.openInNewTab || false,
       isColumnTitle: item.isColumnTitle || false,
     });
-  };
-
-  const handleDelete = async (id: number) => {
-    if (confirm("Tem certeza que deseja deletar este item?")) {
-      try {
-        await deleteMutation.mutateAsync({ id });
-        toast.success("Item de menu deletado");
-        menuQuery.refetch();
-      } catch (error) {
-        toast.error("Erro ao deletar item");
-      }
-    }
   };
 
   const handleCancel = () => {
@@ -136,6 +233,18 @@ export default function AdminMenu() {
     });
   };
 
+  const handleDelete = async (id: number) => {
+    if (!confirm("Tem certeza que deseja deletar este item?")) return;
+
+    try {
+      await deleteMutation.mutateAsync({ id });
+      toast.success("Item deletado");
+      menuQuery.refetch();
+    } catch (error) {
+      toast.error("Erro ao deletar item");
+    }
+  };
+
   const toggleCategory = (id: number) => {
     const newExpanded = new Set(expandedCategories);
     if (newExpanded.has(id)) {
@@ -148,68 +257,28 @@ export default function AdminMenu() {
 
   const renderMenuItems = (items: any[], parentId: number | null = null, level = 0) => {
     const filtered = items
-      .filter(item => item.parentId === parentId)
+      .filter((item) => item.parentId === parentId)
       .sort((a, b) => a.sortOrder - b.sortOrder);
 
     if (filtered.length === 0) return null;
 
     return (
       <>
-        {filtered.map(item => {
-          const hasChildren = items.some(child => child.parentId === item.id);
+        {filtered.map((item) => {
+          const hasChildren = items.some((child) => child.parentId === item.id);
           const isExpanded = expandedCategories.has(item.id);
-          const marginLeft = level * 24;
 
           return (
             <div key={item.id}>
-              <div className="border rounded-lg p-4 mb-3 hover:bg-gray-50 transition-colors" style={{ marginLeft: `${marginLeft}px` }}>
-                <div className="flex items-center gap-3">
-                  <GripVertical className="w-5 h-5 text-gray-400 cursor-move flex-shrink-0" />
-                  
-                  {hasChildren && (
-                    <button
-                      onClick={() => toggleCategory(item.id)}
-                      className="p-1 hover:bg-gray-200 rounded transition-colors flex-shrink-0"
-                      aria-label={isExpanded ? "Recolher" : "Expandir"}
-                    >
-                      <ChevronRight
-                        size={16}
-                        className={`transition-transform ${isExpanded ? "rotate-90" : ""}`}
-                      />
-                    </button>
-                  )}
-                  {!hasChildren && <div className="w-7 flex-shrink-0" />}
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      {hasChildren && <span className="text-xs text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded">CATEGORIA</span>}
-                      <h4 className="font-medium truncate">{item.label}</h4>
-                      <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded font-semibold">#{item.sortOrder}</span>
-                    </div>
-                    <p className="text-sm text-gray-500 truncate">
-                      {item.linkType === "internal" ? "Link Interno" : "Link Externo"}
-                      {item.linkType === "external" && ` - ${item.externalUrl}`}
-                    </p>
-                  </div>
-
-                  <div className="flex gap-2 flex-shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(item)}
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              <SortableMenuItem
+                item={item}
+                items={items}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onToggle={toggleCategory}
+                isExpanded={isExpanded}
+                level={level}
+              />
 
               {hasChildren && isExpanded && renderMenuItems(items, item.id, level + 1)}
             </div>
@@ -221,14 +290,9 @@ export default function AdminMenu() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Gerenciar Menu</h1>
-        <p className="text-gray-600">Adicione, edite e organize os itens do menu principal com suporte a categorias aninhadas</p>
-      </div>
-
       <Card>
         <CardHeader>
-          <CardTitle>{editingId ? "Editar Item de Menu" : "Novo Item de Menu"}</CardTitle>
+          <CardTitle>Novo Item de Menu</CardTitle>
           <CardDescription>
             Configure um novo item de menu ou edite um existente. Itens sem pai são categorias principais.
           </CardDescription>
@@ -236,22 +300,17 @@ export default function AdminMenu() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Label *</label>
+              <label className="block text-sm font-medium mb-2">Label *</label>
               <Input
+                placeholder="Ex: Notícias, Sobre, Contato"
                 value={formData.label}
                 onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                placeholder="Ex: Notícias, Sobre, Contato"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Tipo de Link *</label>
-              <Select
-                value={formData.linkType}
-                onValueChange={(value: any) =>
-                  setFormData({ ...formData, linkType: value })
-                }
-              >
+              <label className="block text-sm font-medium mb-2">Tipo de Link *</label>
+              <Select value={formData.linkType} onValueChange={(value) => setFormData({ ...formData, linkType: value as "internal" | "external" })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -264,13 +323,8 @@ export default function AdminMenu() {
 
             {formData.linkType === "internal" && (
               <div>
-                <label className="block text-sm font-medium mb-1">Página *</label>
-                <Select
-                  value={formData.internalPageId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, internalPageId: value })
-                  }
-                >
+                <label className="block text-sm font-medium mb-2">Página *</label>
+                <Select value={formData.internalPageId} onValueChange={(value) => setFormData({ ...formData, internalPageId: value })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma página" />
                   </SelectTrigger>
@@ -287,50 +341,39 @@ export default function AdminMenu() {
 
             {formData.linkType === "external" && (
               <div>
-                <label className="block text-sm font-medium mb-1">URL *</label>
+                <label className="block text-sm font-medium mb-2">URL *</label>
                 <Input
-                  value={formData.externalUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, externalUrl: e.target.value })
-                  }
                   placeholder="https://exemplo.com"
+                  value={formData.externalUrl}
+                  onChange={(e) => setFormData({ ...formData, externalUrl: e.target.value })}
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium mb-1">Categoria Pai (opcional)</label>
-              <Select
-                value={formData.parentId}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, parentId: value })
-                }
-              >
+              <label className="block text-sm font-medium mb-2">Categoria Pai (opcional)</label>
+              <Select value={formData.parentId || "none"} onValueChange={(value) => setFormData({ ...formData, parentId: value === "none" ? "" : value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Nenhuma (item principal)" />
                 </SelectTrigger>
                 <SelectContent>
-                  {menuQuery.data
-                    ?.filter((item: any) => item.id !== editingId && item.isColumnTitle)
-                    .map((item: any) => (
-                      <SelectItem key={item.id} value={item.id.toString()}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
+                  <SelectItem value="none">Nenhuma (item principal)</SelectItem>
+                  {menuQuery.data?.map((item: any) => (
+                    <SelectItem key={item.id} value={item.id.toString()}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Ordem de Exibição</label>
+              <label className="block text-sm font-medium mb-2">Ordem de Exibição</label>
               <Input
                 type="number"
-                min="0"
-                value={formData.sortOrder}
-                onChange={(e) =>
-                  setFormData({ ...formData, sortOrder: e.target.value })
-                }
                 placeholder="0"
+                value={formData.sortOrder}
+                onChange={(e) => setFormData({ ...formData, sortOrder: e.target.value })}
               />
               <p className="text-xs text-gray-500 mt-1">Número menor = exibido primeiro. Deixe em branco para 0.</p>
             </div>
@@ -339,9 +382,7 @@ export default function AdminMenu() {
               <Checkbox
                 id="columnTitle"
                 checked={formData.isColumnTitle}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, isColumnTitle: checked as boolean })
-                }
+                onCheckedChange={(checked) => setFormData({ ...formData, isColumnTitle: checked as boolean })}
               />
               <label htmlFor="columnTitle" className="text-sm font-medium cursor-pointer">
                 É Título da Coluna (sem link, texto BOLD)
@@ -352,9 +393,7 @@ export default function AdminMenu() {
               <Checkbox
                 id="newTab"
                 checked={formData.openInNewTab}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, openInNewTab: checked as boolean })
-                }
+                onCheckedChange={(checked) => setFormData({ ...formData, openInNewTab: checked as boolean })}
               />
               <label htmlFor="newTab" className="text-sm font-medium cursor-pointer">
                 Abrir em nova aba
@@ -379,16 +418,18 @@ export default function AdminMenu() {
         <CardHeader>
           <CardTitle>Itens do Menu</CardTitle>
           <CardDescription>
-            Organize seus itens de menu em categorias. Clique em um item para expandir subcategorias.
+            Arraste e solte para reordenar os itens. Clique para expandir subcategorias.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {menuQuery.isLoading ? (
             <p className="text-gray-500">Carregando...</p>
           ) : menuQuery.data && menuQuery.data.length > 0 ? (
-            <div className="space-y-2">
-              {renderMenuItems(menuQuery.data)}
-            </div>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={menuQuery.data.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">{renderMenuItems(menuQuery.data)}</div>
+              </SortableContext>
+            </DndContext>
           ) : (
             <p className="text-gray-500">Nenhum item de menu criado ainda.</p>
           )}
