@@ -509,3 +509,16 @@
 - [x] Atualizar título do card "Serviços" para corresponder ao estilo dos cards "Vídeos" e "Transparência"
 - [x] Atualizar título do card "Documentos em Destaque" para corresponder ao estilo dos cards "Vídeos" e "Transparência"
 - [x] Documentar padrão de estilo para futuros cards
+
+
+## Seção de Carrossel Dinâmico
+- [x] Projetar estrutura do carrossel com navegação automática e manual
+- [x] Criar componente FeaturedCarousel reutilizável
+- [x] Implementar navegação com setas (anterior/próximo)
+- [x] Adicionar indicadores de posição (dots)
+- [x] Implementar auto-play com intervalo configurável
+- [x] Adicionar pausa ao hover
+- [x] Criar responsividade (mobile, tablet, desktop)
+- [x] Integrar carrossel na página Home
+- [x] Adicionar transições suaves entre slides
+- [x] Testar acessibilidade e navegação por teclado

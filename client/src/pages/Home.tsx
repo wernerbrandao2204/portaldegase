@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useMemo, useState, useEffect } from "react";
 import ServicesSection from "@/components/ServicesSection";
 import FeaturedDocuments from "@/components/FeaturedDocuments";
+import FeaturedCarousel from "@/components/FeaturedCarousel";
 
 function BannerSection() {
   const { data: banners } = trpc.banners.list.useQuery();
@@ -388,10 +389,55 @@ function UnitsSection() {
   );
 }
 
+function HighlightsCarouselSection() {
+  const { data: posts } = trpc.posts.list.useQuery({ status: "published", limit: 10 });
+  
+  const carouselItems = useMemo(() => {
+    if (!posts?.items || posts.items.length === 0) {
+      return [
+        {
+          id: 1,
+          title: "Degase oferece oportunidades de formação continuada",
+          description: "Conheça os programas de capacitação e desenvolvimento profissional disponíveis para agentes socioeducativos.",
+          badge: "Destaque",
+          link: "/noticias",
+        },
+        {
+          id: 2,
+          title: "Transparência e Participação Social",
+          description: "Acesse informações sobre ações, programas e políticas públicas do DEGASE.",
+          badge: "Importante",
+          link: "/transparencia",
+        },
+      ];
+    }
+    
+    return posts.items.slice(0, 5).map((post: any) => ({
+      id: post.id,
+      title: post.title,
+      description: post.excerpt || post.content?.substring(0, 150),
+      badge: "Notícia",
+      link: `/noticias/${post.slug}`,
+      image: post.featuredImage,
+    }));
+  }, [posts?.items]);
+
+  return (
+    <FeaturedCarousel
+      items={carouselItems}
+      title="Destaques"
+      autoPlayInterval={6000}
+      showIndicators={true}
+      showArrows={true}
+    />
+  );
+}
+
 export default function Home() {
   return (
     <main id="main-content" role="main">
       <BannerSection />
+      <HighlightsCarouselSection />
       <NewsSection />
       <ServicesSection />
       <VideosSection />
