@@ -503,3 +503,9 @@
 - [x] Adicionar informações de data e período no relatório
 - [x] Testar exportação com diferentes navegadores
 - [x] Validar qualidade do PDF gerado
+
+
+## Atualização de Estilo Visual dos Cards
+- [x] Atualizar título do card "Serviços" para corresponder ao estilo dos cards "Vídeos" e "Transparência"
+- [x] Atualizar título do card "Documentos em Destaque" para corresponder ao estilo dos cards "Vídeos" e "Transparência"
+- [x] Documentar padrão de estilo para futuros cards

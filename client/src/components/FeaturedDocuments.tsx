@@ -56,12 +56,10 @@ export default function FeaturedDocuments() {
   return (
     <section className="py-12 bg-white">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold mb-2" style={{ color: "var(--degase-blue-dark)" }}>
+        <h2 className="text-2xl md:text-3xl font-bold text-center mb-2" style={{ color: "var(--degase-blue-light)" }}>
           Documentos em Destaque
         </h2>
-        <p className="text-gray-600 mb-8">
-          Acesse os documentos mais importantes e atualizados do DEGASE
-        </p>
+        <div className="w-16 h-1 mx-auto mb-8" style={{ backgroundColor: "var(--degase-blue-dark)" }} />
 
         {/* Filtros por categoria */}
         {categories && categories.length > 0 && (
