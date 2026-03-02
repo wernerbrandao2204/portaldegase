@@ -603,3 +603,5 @@ export const socialShares = mysqlTable("social_shares", {
 
 export type SocialShare = typeof socialShares.$inferSelect;
 export type InsertSocialShare = typeof socialShares.$inferInsert;
+
+

@@ -113,6 +113,7 @@ export default function AdminPosts() {
   }
 
   function editPost(post: any) {
+    setShowEditor(true);
     setEditingId(post.id);
     setTitle(post.title);
     setContent(post.content);

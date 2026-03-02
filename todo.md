@@ -518,3 +518,20 @@
 - [x] Implementar carregamento progressivo de documentos
 - [x] Testar paginação com múltiplas categorias
 - [x] Adicionar indicador de carregamento ao clicar em "Carregar mais"
+
+
+## Correção de Erro ao Editar Notícia
+- [ ] Diagnosticar erro "An unexpected error occurred." em admin/posts ao editar notícia
+- [ ] Verificar logs do servidor e console do navegador
+- [ ] Corrigir erro de carregamento/salvamento de notícia
+- [ ] Testar edição de notícia após correção
+
+## Sistema de Menu com Categorias e Links
+- [ ] Criar tabela menuCategories no schema (name, description, sortOrder, isActive)
+- [ ] Criar tabela menuItems no schema (categoryId, label, url, sortOrder, isActive)
+- [ ] Implementar funções de banco de dados para CRUD de menu
+- [ ] Criar routers tRPC para gerenciar menu
+- [ ] Criar página AdminMenu para gerenciar categorias e links
+- [ ] Integrar menu dropdown no header
+- [ ] Testar menu com múltiplas categorias e links
+- [ ] Validar responsividade em mobile
