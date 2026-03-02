@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, Menu, X, Eye, Plus, Minus, Instagram, Facebook, Twitter, Youtube, Settings, ChevronDown } from "lucide-react";
+import { Search, Menu, X, Eye, Plus, Minus, Instagram, Facebook, Twitter, Youtube, Settings, ChevronDown, Moon, Sun } from "lucide-react";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { AccessibilityPanel } from "./AccessibilityPanel";
 import { DynamicMenu } from "./DynamicMenu";
 import { trpc } from "@/lib/trpc";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -15,6 +16,7 @@ export default function SiteHeader() {
   const [, navigate] = useLocation();
   const { highContrast, toggleHighContrast, increaseFontSize, decreaseFontSize } = useAccessibility();
   const { user, isAuthenticated } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const { data: menuItems = [] } = trpc.menu.hierarchy.useQuery();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -90,8 +92,6 @@ export default function SiteHeader() {
           <Link href="/" className="flex items-center gap-2 shrink-0" aria-label="DEGASE - Página Inicial">
             <img src="https://www.rj.gov.br/degase/sites/default/files/brasao-degase-300.png" alt="DEGASE - Departamento Geral de Ações Socioeducativas" className="h-12 md:h-14 object-contain" />
             <div className="hidden sm:block">
-              <div className="text-[10px] uppercase tracking-wider opacity-80">Governo do Estado</div>
-              <div className="text-lg font-bold leading-tight">DEGASE</div>
               <div className="text-[9px] opacity-70">Departamento Geral de Ações Socioeducativas</div>
             </div>
           </Link>
@@ -137,6 +137,14 @@ export default function SiteHeader() {
               aria-label="Abrir busca"
             >
               <Search size={20} />
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="text-white p-2 hover:bg-white/10 rounded-md transition-colors"
+              aria-label={`Mudar para modo ${theme === 'light' ? 'escuro' : 'claro'}`}
+              title={`Modo ${theme === 'light' ? 'escuro' : 'claro'}`}
+            >
+              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
           </div>
         </div>
