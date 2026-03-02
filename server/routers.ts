@@ -1073,6 +1073,7 @@ export const appRouter = router({
       parentId: z.number().optional(),
       sortOrder: z.number().default(0),
       openInNewTab: z.boolean().default(false),
+      isColumnTitle: z.boolean().default(false),
     })).mutation(async ({ input, ctx }) => {
       if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
       return db.createMenuItem({
@@ -1083,6 +1084,7 @@ export const appRouter = router({
         parentId: input.parentId || null,
         sortOrder: input.sortOrder,
         openInNewTab: input.openInNewTab,
+        isColumnTitle: input.isColumnTitle,
         isActive: true,
       });
     }),
@@ -1095,6 +1097,7 @@ export const appRouter = router({
       parentId: z.number().optional(),
       sortOrder: z.number().optional(),
       openInNewTab: z.boolean().optional(),
+      isColumnTitle: z.boolean().optional(),
       isActive: z.boolean().optional(),
     })).mutation(async ({ input, ctx }) => {
       if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });

@@ -12,6 +12,7 @@ interface MenuItem {
   sortOrder: number;
   isActive: boolean;
   openInNewTab: boolean;
+  isColumnTitle?: boolean;
   page?: {
     id: number;
     slug: string;
@@ -95,7 +96,11 @@ export function DynamicMenu({
                 )}
                 {!hasChildren && <div className={isSubmenu ? "w-5" : "w-7"} />}
 
-                {item.linkType === "internal" ? (
+                {item.isColumnTitle ? (
+                  <div className="flex-1 px-3 py-2 font-bold text-white">
+                    {item.label}
+                  </div>
+                ) : item.linkType === "internal" ? (
                   <Link
                     href={href}
                     onClick={onItemClick}

@@ -559,3 +559,12 @@
 - [x] Integrar MenuColumnsDropdown no SiteHeader
 - [x] Atualizar AdminMenu para gerenciar categorias principais
 - [x] Testar menu em colunas em diferentes resoluções
+
+
+## Implementação de Título da Coluna no Menu
+- [x] Remover MenuColumnsDropdown e segundo menu do header
+- [x] Adicionar campo 'isColumnTitle' no schema menuItems
+- [x] Atualizar AdminMenu com checkbox 'É Título da Coluna'
+- [x] Filtrar 'Categoria PAI' para mostrar apenas títulos de coluna
+- [x] Atualizar DynamicMenu para exibir títulos em BOLD sem links
+- [x] Testar funcionalidade completa

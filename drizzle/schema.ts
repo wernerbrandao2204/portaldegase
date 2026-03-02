@@ -568,6 +568,7 @@ export const menuItems = mysqlTable("menu_items", {
   sortOrder: int("sortOrder").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
   openInNewTab: boolean("openInNewTab").default(false).notNull(),
+  isColumnTitle: boolean("isColumnTitle").default(false).notNull(), // Marca item como título de coluna (sem link)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

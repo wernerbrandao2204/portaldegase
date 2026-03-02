@@ -1,0 +1,1 @@
+ALTER TABLE `menu_items` ADD `isColumnTitle` boolean DEFAULT false NOT NULL;

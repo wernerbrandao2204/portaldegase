@@ -19,6 +19,7 @@ export default function AdminMenu() {
     externalUrl: "",
     parentId: "",
     openInNewTab: false,
+    isColumnTitle: false,
   });
 
   const menuQuery = trpc.menu.list.useQuery();
@@ -56,6 +57,7 @@ export default function AdminMenu() {
           externalUrl: formData.externalUrl || undefined,
           parentId: formData.parentId ? parseInt(formData.parentId) : undefined,
           openInNewTab: formData.openInNewTab,
+          isColumnTitle: formData.isColumnTitle,
         });
         toast.success("Item de menu atualizado");
         setEditingId(null);
@@ -67,6 +69,7 @@ export default function AdminMenu() {
           externalUrl: formData.externalUrl || undefined,
           parentId: formData.parentId ? parseInt(formData.parentId) : undefined,
           openInNewTab: formData.openInNewTab,
+          isColumnTitle: formData.isColumnTitle,
         });
         toast.success("Item de menu criado");
       }
@@ -78,6 +81,7 @@ export default function AdminMenu() {
         externalUrl: "",
         parentId: "",
         openInNewTab: false,
+        isColumnTitle: false,
       });
       menuQuery.refetch();
     } catch (error) {
@@ -94,6 +98,7 @@ export default function AdminMenu() {
       externalUrl: item.externalUrl || "",
       parentId: item.parentId?.toString() || "",
       openInNewTab: item.openInNewTab,
+      isColumnTitle: item.isColumnTitle || false,
     });
   };
 
@@ -118,6 +123,7 @@ export default function AdminMenu() {
       externalUrl: "",
       parentId: "",
       openInNewTab: false,
+      isColumnTitle: false,
     });
   };
 
@@ -295,7 +301,7 @@ export default function AdminMenu() {
                 </SelectTrigger>
                 <SelectContent>
                   {menuQuery.data
-                    ?.filter((item: any) => item.id !== editingId)
+                    ?.filter((item: any) => item.id !== editingId && item.isColumnTitle)
                     .map((item: any) => (
                       <SelectItem key={item.id} value={item.id.toString()}>
                         {item.label}
@@ -303,6 +309,19 @@ export default function AdminMenu() {
                     ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="columnTitle"
+                checked={formData.isColumnTitle}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isColumnTitle: checked as boolean })
+                }
+              />
+              <label htmlFor="columnTitle" className="text-sm font-medium cursor-pointer">
+                É Título da Coluna (sem link, texto BOLD)
+              </label>
             </div>
 
             <div className="flex items-center gap-2">
