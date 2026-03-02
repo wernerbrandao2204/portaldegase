@@ -7,7 +7,7 @@ import ServicesSection from "@/components/ServicesSection";
 import FeaturedDocuments from "@/components/FeaturedDocuments";
 
 function BannerSection() {
-  const { data: banners } = trpc.banners.list.useQuery({ activeOnly: true });
+  const { data: banners } = trpc.banners.list.useQuery();
   const [currentBanner, setCurrentBanner] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
 
@@ -191,7 +191,7 @@ function NewsSection() {
 }
 
 function VideosSection() {
-  const { data: videos } = trpc.videos.list.useQuery({ activeOnly: true });
+  const { data: videos } = trpc.videos.list.useQuery();
   const featuredVideo = videos?.find((v: any) => v.isFeatured) || videos?.[0];
 
   const getYoutubeEmbedUrl = (url: string) => {

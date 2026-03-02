@@ -12,7 +12,7 @@ const unitTypes = [
 
 export default function Units() {
   const [filter, setFilter] = useState("");
-  const { data: units, isLoading } = trpc.units.list.useQuery(filter ? { type: filter } : undefined);
+  const { data: units, isLoading } = trpc.units.list.useQuery();
 
   return (
     <main id="main-content" className="py-8">

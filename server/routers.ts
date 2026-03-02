@@ -952,7 +952,16 @@ export const appRouter = router({
       await db.reorderFeaturedDocuments(input.orders);
       return { success: true };
     }),
-    getFeaturedOrdered: publicProcedure.query(async () => db.getFeaturedDocumentsOrdered())
+    getFeaturedOrdered: publicProcedure.query(async () => db.getFeaturedDocumentsOrdered()),
+    updateName: adminProcedure.input(z.object({
+      id: z.number(),
+      name: z.string().min(1),
+    })).mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== 'admin') {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Acesso restrito' });
+      }
+      return db.updateDocument(input.id, { name: input.name });
+    }),
   }),
 
   documentVersions: router({

@@ -1581,14 +1581,15 @@ export async function recordPostView(postId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const post = await db.query.posts.findFirst({
-    where: eq(posts.id, postId),
-  });
+  const post = await db.select()
+    .from(posts)
+    .where(eq(posts.id, postId))
+    .limit(1);
   
-  if (!post) throw new Error("Post not found");
+  if (!post || post.length === 0) throw new Error("Post not found");
   
   await db.update(posts)
-    .set({ viewCount: (post.viewCount || 0) + 1 })
+    .set({ viewCount: (post[0].viewCount || 0) + 1 })
     .where(eq(posts.id, postId));
   
   return { success: true };

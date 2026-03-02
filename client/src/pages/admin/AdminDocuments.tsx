@@ -19,6 +19,8 @@ export default function AdminDocuments() {
   const [categoryDescription, setCategoryDescription] = useState("");
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
   const [showFeaturedReorder, setShowFeaturedReorder] = useState(false);
+  const [editingDocId, setEditingDocId] = useState<number | null>(null);
+  const [editingDocName, setEditingDocName] = useState("");
 
   const utils = trpc.useUtils();
   const { data: documents, isLoading: documentsLoading } = trpc.documents.list.useQuery();
@@ -66,6 +68,16 @@ export default function AdminDocuments() {
       utils.documents.list.invalidate();
       utils.documents.getFeatured.invalidate();
       toast.success("Status de destaque atualizado!");
+    },
+    onError: (e) => toast.error(`Erro: ${e.message}`),
+  });
+
+  const updateDocumentNameMutation = trpc.documents.updateName.useMutation({
+    onSuccess: () => {
+      utils.documents.list.invalidate();
+      toast.success("Nome do documento atualizado!");
+      setEditingDocId(null);
+      setEditingDocName("");
     },
     onError: (e) => toast.error(`Erro: ${e.message}`),
   });
@@ -327,6 +339,41 @@ export default function AdminDocuments() {
         )}
       </div>
 
+      {editingDocId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h2 className="text-lg font-bold mb-4">Editar Nome do Documento</h2>
+            <input
+              type="text"
+              value={editingDocName}
+              onChange={(e) => setEditingDocName(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md mb-4"
+              placeholder="Nome do documento"
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setEditingDocId(null)}
+                className="px-4 py-2 border rounded-md hover:bg-gray-100"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (editingDocName.trim()) {
+                    updateDocumentNameMutation.mutate({ id: editingDocId, name: editingDocName });
+                  } else {
+                    toast.error("Nome não pode estar vazio");
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {documentsLoading ? (
         <p className="text-gray-500">Carregando documentos...</p>
       ) : Object.keys(documentsByCategory).length > 0 ? (
@@ -350,6 +397,13 @@ export default function AdminDocuments() {
                       </div>
                     </div>
                     <div className="flex gap-2">
+                      <button
+                        onClick={() => { setEditingDocId(doc.id); setEditingDocName(doc.name); }}
+                        className="p-1.5 hover:bg-gray-200 rounded text-gray-600"
+                        title="Editar nome"
+                      >
+                        <Edit size={16} />
+                      </button>
                       <button
                         onClick={() => toggleFeaturedMutation.mutate({ id: doc.id, isFeatured: !doc.isFeatured })}
                         className={`p-1.5 rounded transition-colors ${doc.isFeatured ? "bg-yellow-100 text-yellow-600" : "hover:bg-yellow-100 text-gray-400 hover:text-yellow-600"}`}
