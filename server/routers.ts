@@ -1184,5 +1184,40 @@ export const appRouter = router({
       return posts;
     }),
   }),
+
+  advancedAnalytics: router({
+    getSharesByPlatform: publicProcedure.input(z.object({
+      days: z.number().default(30),
+    })).query(async ({ input }) => {
+      const shares = await db.getSharesByPlatform(input.days);
+      return shares;
+    }),
+    getConversionRate: publicProcedure.input(z.object({
+      days: z.number().default(30),
+    })).query(async ({ input }) => {
+      const rate = await db.getConversionRate(input.days);
+      return rate;
+    }),
+    getPerformanceComparison: publicProcedure.input(z.object({
+      currentDays: z.number().default(30),
+      previousDays: z.number().default(30),
+    })).query(async ({ input }) => {
+      const comparison = await db.getPerformanceComparison(input.currentDays, input.previousDays);
+      return comparison;
+    }),
+    getTopPostsByEngagement: publicProcedure.input(z.object({
+      days: z.number().default(30),
+      limit: z.number().default(10),
+    })).query(async ({ input }) => {
+      const posts = await db.getTopPostsByEngagement(input.days, input.limit);
+      return posts;
+    }),
+    getEngagementByDay: publicProcedure.input(z.object({
+      days: z.number().default(30),
+    })).query(async ({ input }) => {
+      const data = await db.getEngagementByDay(input.days);
+      return data;
+    }),
+  }),
 });
 export type AppRouter = typeof appRouter;

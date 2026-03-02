@@ -1837,3 +1837,218 @@ export async function getMostSharedPosts(limit: number = 5) {
     .orderBy(desc(sql`COUNT(${socialShares.id})`))
     .limit(limit);
 }
+
+
+// ==================== ADVANCED ANALYTICS ====================
+/**
+ * Obtém compartilhamentos por plataforma
+ */
+export async function getSharesByPlatform(days: number = 30) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  
+  return db.select({
+    platform: socialShares.platform,
+    count: sql<number>`COUNT(*)`,
+  })
+    .from(socialShares)
+    .where(gte(socialShares.sharedAt, startDate))
+    .groupBy(socialShares.platform)
+    .orderBy(desc(sql`COUNT(*)`));
+}
+
+/**
+ * Calcula taxa de conversão (visualizações → compartilhamentos)
+ */
+export async function getConversionRate(days: number = 30) {
+  const db = await getDb();
+  if (!db) return { totalViews: 0, totalShares: 0, conversionRate: 0 };
+  
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  
+  // Total de visualizações
+  const viewsResult = await db.select({
+    count: sql<number>`COUNT(*)`,
+  })
+    .from(postViewLimits)
+    .where(gte(postViewLimits.viewedAt, startDate));
+  
+  const totalViews = viewsResult[0]?.count || 0;
+  
+  // Total de compartilhamentos
+  const sharesResult = await db.select({
+    count: sql<number>`COUNT(*)`,
+  })
+    .from(socialShares)
+    .where(gte(socialShares.sharedAt, startDate));
+  
+  const totalShares = sharesResult[0]?.count || 0;
+  
+  // Taxa de conversão
+  const conversionRate = totalViews > 0 ? (totalShares / totalViews) * 100 : 0;
+  
+  return {
+    totalViews,
+    totalShares,
+    conversionRate: parseFloat(conversionRate.toFixed(2)),
+  };
+}
+
+/**
+ * Compara desempenho entre dois períodos
+ */
+export async function getPerformanceComparison(currentDays: number = 30, previousDays: number = 30) {
+  const db = await getDb();
+  if (!db) return { current: {}, previous: {}, comparison: {} };
+  
+  const now = new Date();
+  const currentStart = new Date(now.getTime() - currentDays * 24 * 60 * 60 * 1000);
+  const previousEnd = new Date(currentStart.getTime() - 1);
+  const previousStart = new Date(previousEnd.getTime() - previousDays * 24 * 60 * 60 * 1000);
+  
+  // Período atual
+  const currentViews = await db.select({
+    count: sql<number>`COUNT(*)`,
+  })
+    .from(postViewLimits)
+    .where(and(gte(postViewLimits.viewedAt, currentStart), lte(postViewLimits.viewedAt, now)));
+  
+  const currentShares = await db.select({
+    count: sql<number>`COUNT(*)`,
+  })
+    .from(socialShares)
+    .where(and(gte(socialShares.sharedAt, currentStart), lte(socialShares.sharedAt, now)));
+  
+  // Período anterior
+  const previousViews = await db.select({
+    count: sql<number>`COUNT(*)`,
+  })
+    .from(postViewLimits)
+    .where(and(gte(postViewLimits.viewedAt, previousStart), lte(postViewLimits.viewedAt, previousEnd)));
+  
+  const previousShares = await db.select({
+    count: sql<number>`COUNT(*)`,
+  })
+    .from(socialShares)
+    .where(and(gte(socialShares.sharedAt, previousStart), lte(socialShares.sharedAt, previousEnd)));
+  
+  const currentViewsCount = currentViews[0]?.count || 0;
+  const currentSharesCount = currentShares[0]?.count || 0;
+  const previousViewsCount = previousViews[0]?.count || 0;
+  const previousSharesCount = previousShares[0]?.count || 0;
+  
+  // Calcular variação percentual
+  const viewsChange = previousViewsCount > 0 
+    ? ((currentViewsCount - previousViewsCount) / previousViewsCount) * 100 
+    : 0;
+  
+  const sharesChange = previousSharesCount > 0 
+    ? ((currentSharesCount - previousSharesCount) / previousSharesCount) * 100 
+    : 0;
+  
+  return {
+    current: {
+      views: currentViewsCount,
+      shares: currentSharesCount,
+    },
+    previous: {
+      views: previousViewsCount,
+      shares: previousSharesCount,
+    },
+    comparison: {
+      viewsChange: parseFloat(viewsChange.toFixed(2)),
+      sharesChange: parseFloat(sharesChange.toFixed(2)),
+    },
+  };
+}
+
+/**
+ * Obtém posts mais engajados (combinando visualizações e compartilhamentos)
+ */
+export async function getTopPostsByEngagement(days: number = 30, limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  
+  return db.select({
+    ...getTableColumns(posts),
+    views: sql<number>`COUNT(DISTINCT ${postViewLimits.id})`,
+    shares: sql<number>`COUNT(DISTINCT ${socialShares.id})`,
+    engagementScore: sql<number>`COUNT(DISTINCT ${postViewLimits.id}) + (COUNT(DISTINCT ${socialShares.id}) * 2)`,
+  })
+    .from(posts)
+    .leftJoin(postViewLimits, and(
+      eq(posts.id, postViewLimits.postId),
+      gte(postViewLimits.viewedAt, startDate)
+    ))
+    .leftJoin(socialShares, and(
+      eq(posts.id, socialShares.postId),
+      gte(socialShares.sharedAt, startDate)
+    ))
+    .where(eq(posts.status, 'published'))
+    .groupBy(posts.id)
+    .orderBy(desc(sql`COUNT(DISTINCT ${postViewLimits.id}) + (COUNT(DISTINCT ${socialShares.id}) * 2)`))
+    .limit(limit);
+}
+
+/**
+ * Obtém dados de engajamento por dia (para gráfico temporal)
+ */
+export async function getEngagementByDay(days: number = 30) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  
+  // Combinar visualizações e compartilhamentos por dia
+  const viewsByDay = await db.select({
+    date: sql<string>`DATE(${postViewLimits.viewedAt})`,
+    views: sql<number>`COUNT(*)`,
+  })
+    .from(postViewLimits)
+    .where(gte(postViewLimits.viewedAt, startDate))
+    .groupBy(sql`DATE(${postViewLimits.viewedAt})`)
+    .orderBy(asc(sql`DATE(${postViewLimits.viewedAt})`));
+  
+  const sharesByDay = await db.select({
+    date: sql<string>`DATE(${socialShares.sharedAt})`,
+    shares: sql<number>`COUNT(*)`,
+  })
+    .from(socialShares)
+    .where(gte(socialShares.sharedAt, startDate))
+    .groupBy(sql`DATE(${socialShares.sharedAt})`)
+    .orderBy(asc(sql`DATE(${socialShares.sharedAt})`));
+  
+  // Mesclar dados
+  const dateMap = new Map<string, { date: string; views: number; shares: number }>();
+  
+  viewsByDay.forEach(item => {
+    if (item.date) {
+      dateMap.set(item.date, {
+        date: item.date,
+        views: item.views || 0,
+        shares: 0,
+      });
+    }
+  });
+  
+  sharesByDay.forEach(item => {
+    if (item.date) {
+      const existing = dateMap.get(item.date);
+      if (existing) {
+        existing.shares = item.shares || 0;
+      } else {
+        dateMap.set(item.date, {
+          date: item.date,
+          views: 0,
+          shares: item.shares || 0,
+        });
+      }
+    }
+  });
+  
+  return Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+}

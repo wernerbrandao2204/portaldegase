@@ -479,3 +479,16 @@
 - [x] Implementar rastreamento de cliques em compartilhamento
 - [ ] Adicionar métricas de compartilhamento ao AdminAnalytics
 - [ ] Testar compartilhamento em cada plataforma
+
+
+## Dashboard de Analytics Avançado
+- [x] Implementar função getSharesByPlatform em server/db.ts
+- [x] Implementar função getConversionRate em server/db.ts
+- [x] Implementar função getPerformanceComparison em server/db.ts
+- [x] Implementar função getTopPostsByEngagement em server/db.ts
+- [x] Criar routers tRPC para analytics avançadas
+- [x] Expandir AdminAnalytics com gráfico de compartilhamentos por plataforma
+- [x] Adicionar gráfico de taxa de conversão (views → shares)
+- [x] Adicionar comparação de desempenho entre períodos
+- [x] Implementar filtros de data avançados
+- [x] Testar dashboard com dados reais
