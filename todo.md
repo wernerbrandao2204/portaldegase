@@ -546,3 +546,9 @@
 - [x] Adicionar ícones para categorias e subcategorias
 - [x] Testar menu aninhado em mobile, tablet e desktop
 - [x] Validar acessibilidade do menu aninhado
+
+
+## Correção de Erro em admin/menu
+- [x] Diagnosticar erro ao acessar admin/menu
+- [x] Corrigir erro identificado
+- [x] Testar página AdminMenu
