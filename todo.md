@@ -575,3 +575,11 @@
 - [x] Tornar "Página" opcional quando "É Título da Coluna" estiver marcado
 - [x] Atualizar routers tRPC para validação condicional
 - [x] Testar validação com e sem título de coluna
+
+
+## Correção de Exibição do Menu Público
+- [x] Diagnosticar por que itens subordinados não aparecem no menu público
+- [x] Corrigir DynamicMenu para exibir itens subordinados dos títulos de coluna
+- [x] Diminuir tamanho da fonte do menu
+- [x] Alinhar horizontalmente os títulos das colunas
+- [x] Testar menu público com itens subordinados visíveis

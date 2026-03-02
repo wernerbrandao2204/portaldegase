@@ -62,8 +62,11 @@ export function DynamicMenu({
 
     const isSubmenu = level > 0;
 
+    // Alinhar títulos de coluna horizontalmente no nível raiz
+    const hasColumnTitles = !isSubmenu && filteredItems.some((item) => item.isColumnTitle);
+    
     return (
-      <ul className={isSubmenu ? "space-y-0 ml-2 mt-1 border-l border-white/20 pl-2" : "space-y-1"}>
+      <ul className={isSubmenu ? "space-y-0 ml-2 mt-1 border-l border-white/20 pl-2" : hasColumnTitles ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" : "space-y-1"}>
         {filteredItems.map((item) => {
           const hasChildren = items.some(
             (child) => child.parentId === item.id && child.isActive
@@ -97,7 +100,7 @@ export function DynamicMenu({
                 {!hasChildren && <div className={isSubmenu ? "w-5" : "w-7"} />}
 
                 {item.isColumnTitle ? (
-                  <div className="flex-1 px-3 py-2 font-bold text-white">
+                  <div className="flex-1 px-3 py-2 font-bold text-white text-sm">
                     {item.label}
                   </div>
                 ) : item.linkType === "internal" ? (
@@ -136,7 +139,7 @@ export function DynamicMenu({
                 )}
               </div>
 
-              {hasChildren && isExpanded && renderMenuItems(item.id, level + 1)}
+              {hasChildren && (isExpanded || item.isColumnTitle) && renderMenuItems(item.id, level + 1)}
             </li>
           );
         })}
