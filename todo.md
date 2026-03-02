@@ -454,3 +454,28 @@
 - [ ] admin/paginas - cards nao aparecem e autosave rodando antes de clicar
 - [ ] admin/menu - erro inesperado
 - [ ] admin/servicos/analytics - acessos nao sendo contabilizados
+
+## Rate Limiting para Visualizações
+- [x] Adicionar tabela postViewLimits no schema (postId, ipAddress, viewedAt)
+- [x] Implementar função checkViewLimit em server/db.ts
+- [x] Implementar função recordPostViewWithLimit em server/db.ts
+- [x] Atualizar router recordPostView para usar rate limiting
+- [x] Testar rate limiting com múltiplos acessos do mesmo IP
+
+## Dashboard de Trending Topics
+- [x] Adicionar função getTrendingPosts em server/db.ts (últimos 7 dias)
+- [x] Adicionar router analytics.getTrendingPosts em server/routers.ts
+- [x] Criar componente TrendingTopics.tsx na página Home
+- [x] Implementar gráfico de tendência temporal (Chart.js/Recharts)
+- [x] Exibir top 5 notícias mais visualizadas da semana
+- [x] Adicionar filtro de período (7 dias, 30 dias, 90 dias)
+
+## Compartilhamento Social com Rastreamento
+- [x] Adicionar tabela socialShares no schema (postId, platform, sharedAt, ipAddress)
+- [x] Implementar função recordSocialShare em server/db.ts
+- [x] Adicionar router recordSocialShare em server/routers.ts
+- [x] Criar componente SocialShareButtons.tsx com WhatsApp, Facebook, Twitter
+- [x] Integrar SocialShareButtons em NewsDetail.tsx
+- [x] Implementar rastreamento de cliques em compartilhamento
+- [ ] Adicionar métricas de compartilhamento ao AdminAnalytics
+- [ ] Testar compartilhamento em cada plataforma

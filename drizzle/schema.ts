@@ -575,3 +575,31 @@ export const menuItems = mysqlTable("menu_items", {
 export type MenuItem = typeof menuItems.$inferSelect;
 export type MenuItemInsert = typeof menuItems.$inferInsert;
 export type InsertMenuItem = typeof menuItems.$inferInsert;
+
+/**
+ * Post View Limits - rate limiting para visualizações (1 por IP em 24h)
+ */
+export const postViewLimits = mysqlTable("post_view_limits", {
+  id: int("id").autoincrement().primaryKey(),
+  postId: int("postId").notNull().references(() => posts.id, { onDelete: "cascade" }),
+  ipAddress: varchar("ipAddress", { length: 45 }).notNull(),
+  viewedAt: timestamp("viewedAt").defaultNow().notNull(),
+});
+
+export type PostViewLimit = typeof postViewLimits.$inferSelect;
+export type InsertPostViewLimit = typeof postViewLimits.$inferInsert;
+
+/**
+ * Social Shares - rastreamento de compartilhamentos em redes sociais
+ */
+export const socialShares = mysqlTable("social_shares", {
+  id: int("id").autoincrement().primaryKey(),
+  postId: int("postId").notNull().references(() => posts.id, { onDelete: "cascade" }),
+  platform: varchar("platform", { length: 50 }).notNull(), // 'whatsapp', 'facebook', 'twitter'
+  ipAddress: varchar("ipAddress", { length: 45 }).notNull(),
+  userAgent: varchar("userAgent", { length: 500 }),
+  sharedAt: timestamp("sharedAt").defaultNow().notNull(),
+});
+
+export type SocialShare = typeof socialShares.$inferSelect;
+export type InsertSocialShare = typeof socialShares.$inferInsert;

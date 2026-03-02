@@ -1136,5 +1136,53 @@ export const appRouter = router({
       return trend;
     }),
    }),
+
+  postsRouter: router({
+    recordViewWithLimit: publicProcedure.input(z.object({
+      postId: z.number(),
+      ipAddress: z.string(),
+    })).mutation(async ({ input }) => {
+      const success = await db.recordPostViewWithLimit(input.postId, input.ipAddress);
+      return { success };
+    }),
+    getTrendingPosts: publicProcedure.input(z.object({
+      days: z.number().default(7),
+      limit: z.number().default(5),
+    })).query(async ({ input }) => {
+      const posts = await db.getTrendingPosts(input.days, input.limit);
+      return posts;
+    }),
+    getPostEngagementTrend: publicProcedure.input(z.object({
+      postId: z.number(),
+      days: z.number().default(7),
+    })).query(async ({ input }) => {
+      const trend = await db.getPostEngagementTrend(input.postId, input.days);
+      return trend;
+    }),
+  }),
+
+  socialShares: router({
+    recordShare: publicProcedure.input(z.object({
+      postId: z.number(),
+      platform: z.enum(["whatsapp", "facebook", "twitter"]),
+      ipAddress: z.string(),
+      userAgent: z.string().optional(),
+    })).mutation(async ({ input }) => {
+      await db.recordSocialShare(input.postId, input.platform, input.ipAddress, input.userAgent);
+      return { success: true };
+    }),
+    getShareStats: publicProcedure.input(z.object({
+      postId: z.number(),
+    })).query(async ({ input }) => {
+      const stats = await db.getSocialShareStats(input.postId);
+      return stats;
+    }),
+    getMostShared: publicProcedure.input(z.object({
+      limit: z.number().default(5),
+    })).query(async ({ input }) => {
+      const posts = await db.getMostSharedPosts(input.limit);
+      return posts;
+    }),
+  }),
 });
 export type AppRouter = typeof appRouter;

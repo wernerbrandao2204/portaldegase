@@ -29,6 +29,8 @@ import {
   pageBlockItems, InsertPageBlockItem,
   imagesBank, InsertImagesBank,
   menuItems, InsertMenuItem,
+  postViewLimits, InsertPostViewLimit,
+  socialShares, InsertSocialShare,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1631,4 +1633,207 @@ export async function getFeaturedDocumentsByCategory(categoryId?: number) {
     .where(and(...conditions))
     .orderBy(asc(documents.sortOrder), desc(documents.createdAt))
     .limit(3);
+}
+
+
+// ==================== RATE LIMITING PARA VISUALIZAÇÕES ====================
+/**
+ * Verifica se o IP já visualizou o post nas últimas 24 horas
+ */
+export async function hasViewedInLast24Hours(postId: number, ipAddress: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  
+  const result = await db.select()
+    .from(postViewLimits)
+    .where(
+      and(
+        eq(postViewLimits.postId, postId),
+        eq(postViewLimits.ipAddress, ipAddress),
+        gte(postViewLimits.viewedAt, twentyFourHoursAgo)
+      )
+    )
+    .limit(1);
+  
+  return result.length > 0;
+}
+
+/**
+ * Registra a visualização com rate limiting (1 por IP em 24h)
+ */
+export async function recordPostViewWithLimit(postId: number, ipAddress: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  
+  try {
+    // Verifica se já visualizou nas últimas 24h
+    const hasViewed = await hasViewedInLast24Hours(postId, ipAddress);
+    
+    if (hasViewed) {
+      return false; // Não registra visualização
+    }
+    
+    // Registra a visualização
+    await db.insert(postViewLimits).values({
+      postId,
+      ipAddress,
+    });
+    
+    // Incrementa o contador de visualizações do post
+    const post = await db.select().from(posts).where(eq(posts.id, postId)).limit(1);
+    if (post.length > 0) {
+      await db.update(posts)
+        .set({ viewCount: (post[0].viewCount || 0) + 1 })
+        .where(eq(posts.id, postId));
+    }
+    
+    return true; // Visualização registrada com sucesso
+  } catch (error) {
+    console.error("[Database] Failed to record post view with limit:", error);
+    return false;
+  }
+}
+
+// ==================== TRENDING TOPICS ====================
+/**
+ * Obtém os posts mais visualizados dos últimos 7 dias
+ */
+export async function getTrendingPosts(days: number = 7, limit: number = 5) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  
+  return db.select({
+    ...getTableColumns(posts),
+    author: {
+      id: users.id,
+      name: users.name,
+    },
+    category: {
+      id: categories.id,
+      name: categories.name,
+    },
+  })
+    .from(posts)
+    .leftJoin(users, eq(posts.authorId, users.id))
+    .leftJoin(categories, eq(posts.categoryId, categories.id))
+    .where(
+      and(
+        eq(posts.status, 'published'),
+        gte(posts.publishedAt, startDate)
+      )
+    )
+    .orderBy(desc(posts.viewCount))
+    .limit(limit);
+}
+
+/**
+ * Obtém estatísticas de engajamento por período para um post específico
+ */
+export async function getPostEngagementTrend(postId: number, days: number = 7) {
+  const db = await getDb();
+  if (!db) return { viewsByDay: [], sharesByDay: [] };
+  
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  
+  // Agrupa visualizações por dia
+  const viewsByDay = await db.select({
+    date: sql<string>`DATE(${postViewLimits.viewedAt})`,
+    count: sql<number>`COUNT(*)`,
+  })
+    .from(postViewLimits)
+    .where(
+      and(
+        eq(postViewLimits.postId, postId),
+        gte(postViewLimits.viewedAt, startDate)
+      )
+    )
+    .groupBy(sql`DATE(${postViewLimits.viewedAt})`)
+    .orderBy(asc(sql`DATE(${postViewLimits.viewedAt})`));
+  
+  // Agrupa compartilhamentos por dia
+  const sharesByDay = await db.select({
+    date: sql<string>`DATE(${socialShares.sharedAt})`,
+    count: sql<number>`COUNT(*)`,
+  })
+    .from(socialShares)
+    .where(
+      and(
+        eq(socialShares.postId, postId),
+        gte(socialShares.sharedAt, startDate)
+      )
+    )
+    .groupBy(sql`DATE(${socialShares.sharedAt})`)
+    .orderBy(asc(sql`DATE(${socialShares.sharedAt})`))
+  
+  return { viewsByDay, sharesByDay };
+}
+
+// ==================== SOCIAL SHARES ====================
+/**
+ * Registra um compartilhamento em rede social
+ */
+export async function recordSocialShare(postId: number, platform: string, ipAddress: string, userAgent?: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  
+  try {
+    await db.insert(socialShares).values({
+      postId,
+      platform,
+      ipAddress,
+      userAgent: userAgent || undefined,
+    });
+  } catch (error) {
+    console.error("[Database] Failed to record social share:", error);
+    throw error;
+  }
+}
+
+/**
+ * Obtém estatísticas de compartilhamento para um post
+ */
+export async function getSocialShareStats(postId: number) {
+  const db = await getDb();
+  if (!db) return { total: 0, byPlatform: {} };
+  
+  const shares = await db.select({
+    platform: socialShares.platform,
+    count: sql<number>`COUNT(*)`,
+  })
+    .from(socialShares)
+    .where(eq(socialShares.postId, postId))
+    .groupBy(socialShares.platform);
+  
+  const byPlatform: Record<string, number> = {};
+  let total = 0;
+  
+  shares.forEach(share => {
+    byPlatform[share.platform] = share.count;
+    total += share.count;
+  });
+  
+  return { total, byPlatform };
+}
+
+/**
+ * Obtém os posts mais compartilhados
+ */
+export async function getMostSharedPosts(limit: number = 5) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select({
+    ...getTableColumns(posts),
+    shareCount: sql<number>`COUNT(${socialShares.id})`,
+  })
+    .from(posts)
+    .leftJoin(socialShares, eq(posts.id, socialShares.postId))
+    .where(eq(posts.status, 'published'))
+    .groupBy(posts.id)
+    .orderBy(desc(sql`COUNT(${socialShares.id})`))
+    .limit(limit);
 }

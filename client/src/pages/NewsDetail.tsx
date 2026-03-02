@@ -2,6 +2,7 @@ import { useParams, Link } from "wouter";
 import { useEffect, useRef } from "react";
 import { ArrowLeft, Calendar, Eye, Tag, User } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { SocialShareButtons } from "@/components/SocialShareButtons";
 
 export default function NewsDetail() {
   const params = useParams<{ slug: string }>();
@@ -83,6 +84,14 @@ export default function NewsDetail() {
 
 
           <div className="prose-degase" dangerouslySetInnerHTML={{ __html: post.content }} />
+
+          <div className="mt-8 pt-6 border-t">
+            <SocialShareButtons
+              postId={post.id}
+              postTitle={post.title}
+              postUrl={typeof window !== 'undefined' ? window.location.href : ''}
+            />
+          </div>
         </article>
       </div>
     </main>
