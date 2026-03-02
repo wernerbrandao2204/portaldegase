@@ -37,14 +37,17 @@ export default function AdminMenu() {
       return;
     }
 
-    if (formData.linkType === "internal" && !formData.internalPageId) {
-      toast.error("Selecione uma página para links internos");
-      return;
-    }
+    // Se não é título da coluna, validar campos de link
+    if (!formData.isColumnTitle) {
+      if (formData.linkType === "internal" && !formData.internalPageId) {
+        toast.error("Selecione uma página para links internos");
+        return;
+      }
 
-    if (formData.linkType === "external" && !formData.externalUrl) {
-      toast.error("URL é obrigatória para links externos");
-      return;
+      if (formData.linkType === "external" && !formData.externalUrl) {
+        toast.error("URL é obrigatória para links externos");
+        return;
+      }
     }
 
     try {

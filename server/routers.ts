@@ -1067,7 +1067,7 @@ export const appRouter = router({
     hierarchy: publicProcedure.query(async () => db.getMenuItemsHierarchy()),
     create: protectedProcedure.input(z.object({
       label: z.string().min(1),
-      linkType: z.enum(["internal", "external"]),
+      linkType: z.enum(["internal", "external"]).optional(),
       internalPageId: z.number().optional(),
       externalUrl: z.string().optional(),
       parentId: z.number().optional(),
@@ -1076,9 +1076,23 @@ export const appRouter = router({
       isColumnTitle: z.boolean().default(false),
     })).mutation(async ({ input, ctx }) => {
       if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      
+      if (!input.isColumnTitle && !input.linkType) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "linkType obrigatorio" });
+      }
+      
+      if (!input.isColumnTitle) {
+        if (input.linkType === "internal" && !input.internalPageId) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Pagina obrigatoria" });
+        }
+        if (input.linkType === "external" && !input.externalUrl) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "URL obrigatoria" });
+        }
+      }
+      
       return db.createMenuItem({
         label: input.label,
-        linkType: input.linkType,
+        linkType: input.linkType || "internal",
         internalPageId: input.internalPageId,
         externalUrl: input.externalUrl,
         parentId: input.parentId || null,

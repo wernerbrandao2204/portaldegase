@@ -568,3 +568,10 @@
 - [x] Filtrar 'Categoria PAI' para mostrar apenas títulos de coluna
 - [x] Atualizar DynamicMenu para exibir títulos em BOLD sem links
 - [x] Testar funcionalidade completa
+
+
+## Validacao Condicional de Campos no Menu
+- [x] Tornar "Tipo de Link" opcional quando "É Título da Coluna" estiver marcado
+- [x] Tornar "Página" opcional quando "É Título da Coluna" estiver marcado
+- [x] Atualizar routers tRPC para validação condicional
+- [x] Testar validação com e sem título de coluna
