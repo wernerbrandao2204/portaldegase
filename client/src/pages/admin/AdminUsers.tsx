@@ -1,19 +1,24 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Trash2, Edit2, Search, Plus } from "lucide-react";
+import { Trash2, Edit2, Search, Plus, Lock } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function AdminUsers() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const { user: currentUser } = useAuth();
   
   // Form state
   const [openId, setOpenId] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [functionalId, setFunctionalId] = useState("");
+  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [categoryId, setCategoryId] = useState<number | undefined>();
   const [role, setRole] = useState<"user" | "admin" | "contributor">("user");
 
@@ -43,6 +48,17 @@ export default function AdminUsers() {
     },
   });
 
+  const changePasswordMutation = trpc.users.changePassword.useMutation({
+    onSuccess: () => {
+      toast.success("Senha alterada com sucesso!");
+      setIsChangingPassword(null);
+      setNewPassword("");
+    },
+    onError: (error: any) => {
+      toast.error(`Erro: ${error.message}`);
+    },
+  });
+
   const deleteUserMutation = trpc.users.delete.useMutation({
     onSuccess: () => {
       toast.success("Usuário deletado com sucesso!");
@@ -56,16 +72,20 @@ export default function AdminUsers() {
   function resetForm() {
     setEditingId(null);
     setIsCreating(false);
+    setIsChangingPassword(null);
     setOpenId("");
     setName("");
     setEmail("");
     setFunctionalId("");
+    setPassword("");
+    setNewPassword("");
     setCategoryId(undefined);
     setRole("user");
   }
 
   function editUser(user: any) {
     setIsCreating(false);
+    setIsChangingPassword(null);
     setEditingId(user.id);
     setName(user.name || "");
     setEmail(user.email || "");
@@ -77,12 +97,21 @@ export default function AdminUsers() {
   function handleCreateClick() {
     setIsCreating(true);
     setEditingId(null);
+    setIsChangingPassword(null);
     setOpenId("");
     setName("");
     setEmail("");
     setFunctionalId("");
+    setPassword("");
     setCategoryId(undefined);
     setRole("user");
+  }
+
+  function handleChangePasswordClick(userId: number) {
+    setIsChangingPassword(userId);
+    setNewPassword("");
+    setEditingId(null);
+    setIsCreating(false);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -93,8 +122,18 @@ export default function AdminUsers() {
         toast.error("OpenID é obrigatório para criar um novo usuário.");
         return;
       }
-      const data = { openId, name: name || undefined, email: email || undefined, functionalId: functionalId || undefined, role, categoryId };
+      if (!password.trim()) {
+        toast.error("Senha é obrigatória para criar um novo usuário.");
+        return;
+      }
+      const data = { openId, name: name || undefined, email: email || undefined, functionalId: functionalId || undefined, password, role, categoryId };
       createUserMutation.mutate(data);
+    } else if (isChangingPassword) {
+      if (!newPassword.trim()) {
+        toast.error("Nova senha é obrigatória.");
+        return;
+      }
+      changePasswordMutation.mutate({ userId: isChangingPassword, newPassword });
     } else {
       if (!editingId) {
         toast.error("Selecione um usuário para editar.");
@@ -125,6 +164,9 @@ export default function AdminUsers() {
     user.functionalId?.toLowerCase().includes(search.toLowerCase())
   ) || [];
 
+  const isContributor = currentUser?.role === 'contributor';
+  const editingUser = editingId ? listUsers.data?.find((u: any) => u.id === editingId) : null;
+
   return (
     <div className="space-y-6">
       <div>
@@ -138,10 +180,12 @@ export default function AdminUsers() {
           <div className="p-6 border-b">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Usuários do Sistema</h2>
-              <Button onClick={handleCreateClick} size="sm" style={{ backgroundColor: "var(--degase-blue-dark)" }}>
-                <Plus size={16} className="mr-2" />
-                Novo Usuário
-              </Button>
+              {!isContributor && (
+                <Button onClick={handleCreateClick} size="sm" style={{ backgroundColor: "var(--degase-blue-dark)" }}>
+                  <Plus size={16} className="mr-2" />
+                  Novo Usuário
+                </Button>
+              )}
             </div>
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -187,16 +231,27 @@ export default function AdminUsers() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => editUser(user)} className="p-1.5 hover:bg-gray-200 rounded" title="Editar">
-                            <Edit2 size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="p-1.5 hover:bg-red-100 rounded text-red-600"
-                            title="Excluir"
+                          {!isContributor && (
+                            <button onClick={() => editUser(user)} className="p-1.5 hover:bg-gray-200 rounded" title="Editar">
+                              <Edit2 size={14} />
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => handleChangePasswordClick(user.id)} 
+                            className="p-1.5 hover:bg-blue-100 rounded text-blue-600" 
+                            title="Alterar Senha"
                           >
-                            <Trash2 size={14} />
+                            <Lock size={14} />
                           </button>
+                          {!isContributor && (
+                            <button
+                              onClick={() => handleDeleteUser(user.id)}
+                              className="p-1.5 hover:bg-red-100 rounded text-red-600"
+                              title="Excluir"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -216,91 +271,190 @@ export default function AdminUsers() {
         {/* Edit/Create Panel */}
         <div className="bg-white rounded-lg border p-6">
           <h2 className="text-xl font-bold mb-4">
-            {isCreating ? "Criar Novo Usuário" : editingId ? "Editar Usuário" : "Selecione um usuário"}
+            {isCreating ? "Criar Novo Usuário" : isChangingPassword ? "Alterar Senha" : editingId ? "Editar Usuário" : "Selecione um usuário"}
           </h2>
           
-          {isCreating || editingId ? (
+          {isCreating || editingId || isChangingPassword ? (
             <form onSubmit={handleSubmit} className="space-y-4">
-              {isCreating && (
-                <div>
-                  <label className="block text-sm font-medium mb-1">OpenID *</label>
-                  <input
-                    type="text"
-                    value={openId}
-                    onChange={(e) => setOpenId(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-md text-sm"
-                    placeholder="ID único do usuário"
-                    required
-                  />
-                </div>
-              )}
+              {isChangingPassword ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Nova Senha *</label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      placeholder="Mínimo 8 caracteres"
+                      required
+                    />
+                  </div>
+                </>
+              ) : isCreating ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">OpenID *</label>
+                    <input
+                      type="text"
+                      value={openId}
+                      onChange={(e) => setOpenId(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      placeholder="ID único do usuário"
+                      required
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Nome Completo {!isCreating && "*"}</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md text-sm"
-                  required={!isCreating}
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Nome Completo *</label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      required
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Email {!isCreating && "*"}</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md text-sm"
-                  required={!isCreating}
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Email *</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      required
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">ID Funcional</label>
-                <input
-                  type="text"
-                  value={functionalId}
-                  onChange={(e) => setFunctionalId(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md text-sm"
-                  placeholder="Ex: 12345"
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">ID Funcional</label>
+                    <input
+                      type="text"
+                      value={functionalId}
+                      onChange={(e) => setFunctionalId(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      placeholder="Ex: 12345"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Nível de Acesso *</label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as any)}
-                  className="w-full px-3 py-2 border rounded-md text-sm"
-                >
-                  <option value="user">Usuário</option>
-                  <option value="contributor">Contribuidor</option>
-                  <option value="admin">Administrador</option>
-                </select>
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Senha *</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      placeholder="Mínimo 8 caracteres"
+                      required
+                    />
+                  </div>
 
-              {role === "contributor" && (
-                <div>
-                  <label className="block text-sm font-medium mb-1">Categoria *</label>
-                  <select
-                    value={categoryId ?? ""}
-                    onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : undefined)}
-                    className="w-full px-3 py-2 border rounded-md text-sm"
-                  >
-                    <option value="">Selecionar categoria</option>
-                    {listCategories.data?.map((cat: any) => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Nível de Acesso *</label>
+                    <select
+                      value={role}
+                      onChange={(e) => setRole(e.target.value as any)}
+                      className="w-full px-3 py-2 border rounded-md text-sm"
+                    >
+                      <option value="user">Usuário</option>
+                      <option value="contributor">Contribuidor</option>
+                      <option value="admin">Administrador</option>
+                    </select>
+                  </div>
+
+                  {role === "contributor" && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Categoria *</label>
+                      <select
+                        value={categoryId ?? ""}
+                        onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : undefined)}
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                      >
+                        <option value="">Selecionar categoria</option>
+                        {listCategories.data?.map((cat: any) => (
+                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </>
+              ) : editingId ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Nome Completo *</label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      required
+                      disabled={isContributor && currentUser?.id !== editingId}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Email *</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      required
+                      disabled={isContributor && currentUser?.id !== editingId}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">ID Funcional</label>
+                    <input
+                      type="text"
+                      value={functionalId}
+                      onChange={(e) => setFunctionalId(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      placeholder="Ex: 12345"
+                      disabled={isContributor}
+                    />
+                  </div>
+
+                  {!isContributor && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Nível de Acesso *</label>
+                        <select
+                          value={role}
+                          onChange={(e) => setRole(e.target.value as any)}
+                          className="w-full px-3 py-2 border rounded-md text-sm"
+                        >
+                          <option value="user">Usuário</option>
+                          <option value="contributor">Contribuidor</option>
+                          <option value="admin">Administrador</option>
+                        </select>
+                      </div>
+
+                      {role === "contributor" && (
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Categoria *</label>
+                          <select
+                            value={categoryId ?? ""}
+                            onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : undefined)}
+                            className="w-full px-3 py-2 border rounded-md text-sm"
+                          >
+                            <option value="">Selecionar categoria</option>
+                            {listCategories.data?.map((cat: any) => (
+                              <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </>
+              ) : null}
 
               <div className="flex gap-2 pt-4">
-                <Button type="submit" disabled={createUserMutation.isPending || updateUserMutation.isPending} className="flex-1"
+                <Button type="submit" disabled={createUserMutation.isPending || updateUserMutation.isPending || changePasswordMutation.isPending} className="flex-1"
                   style={{ backgroundColor: "var(--degase-blue-dark)" }}>
-                  {createUserMutation.isPending || updateUserMutation.isPending ? "Salvando..." : isCreating ? "Criar" : "Atualizar"}
+                  {createUserMutation.isPending || updateUserMutation.isPending || changePasswordMutation.isPending ? "Salvando..." : isCreating ? "Criar" : isChangingPassword ? "Alterar Senha" : "Atualizar"}
                 </Button>
                 <Button type="button" variant="outline" onClick={resetForm} className="flex-1">
                   Cancelar
@@ -309,7 +463,9 @@ export default function AdminUsers() {
             </form>
           ) : (
             <p className="text-sm text-gray-500 text-center py-8">
-              Selecione um usuário na lista para editar suas informações ou clique em "Novo Usuário" para criar um novo
+              {isContributor 
+                ? "Selecione um usuário para alterar sua senha"
+                : "Selecione um usuário na lista para editar suas informações ou clique em \"Novo Usuário\" para criar um novo"}
             </p>
           )}
 

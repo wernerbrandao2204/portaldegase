@@ -445,6 +445,12 @@ export async function deleteUser(id: number) {
   await db.delete(users).where(eq(users.id, id));
 }
 
+export async function updateUserPassword(id: number, passwordHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, id));
+}
+
 
 // ===== POST HISTORY FUNCTIONS =====
 

@@ -620,3 +620,12 @@
 - [x] Atualizar UI do admin para exibir e gerenciar terceiro nível
 - [x] Atualizar DynamicMenu para renderizar terceiro nível
 - [x] Testar submenus de segundo nível no menu público
+
+
+## Gerenciamento de Senhas de Usuários
+- [x] Implementar geração de senha segura com bcrypt
+- [x] Adicionar campo de senha ao formulário de cadastro de usuários
+- [x] Permitir seleção de categoria no cadastro de novos usuários
+- [x] Implementar função de alterar senha para usuários existentes
+- [x] Adicionar restrições de acesso para Contribuidores (apenas alterar própria senha)
+- [x] Testar funcionalidades de gerenciamento de senhas

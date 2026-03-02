@@ -10,6 +10,7 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   functionalId: varchar("functionalId", { length: 64 }), // ID Funcional do usuário
   loginMethod: varchar("loginMethod", { length: 64 }),
+  passwordHash: text("passwordHash"), // Hash da senha (bcrypt)
   role: mysqlEnum("role", ["user", "admin", "contributor"]).default("user").notNull(),
   categoryId: int("categoryId"), // Para contributors: categoria que podem editar
   createdAt: timestamp("createdAt").defaultNow().notNull(),

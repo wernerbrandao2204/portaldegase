@@ -39,19 +39,25 @@ export const appRouter = router({
       name: z.string().optional(),
       email: z.string().email().optional(),
       functionalId: z.string().optional(),
+      password: z.string().min(8),
       role: z.enum(['user', 'admin', 'contributor']).default('user'),
       categoryId: z.number().optional(),
     })).mutation(async ({ input }) => {
+      const { password, ...userData } = input;
       const existingUser = await db.getUserByOpenId(input.openId);
       if (existingUser) {
         throw new TRPCError({ code: 'CONFLICT', message: 'Usuário com este openId já existe' });
       }
+      const { hashPassword } = await import('./password');
+      const passwordHash = await hashPassword(password);
       await db.upsertUser({
-        openId: input.openId,
-        name: input.name || null,
-        email: input.email || null,
-        role: input.role,
-        categoryId: input.categoryId,
+        openId: userData.openId,
+        name: userData.name || null,
+        email: userData.email || null,
+        functionalId: userData.functionalId || null,
+        role: userData.role,
+        categoryId: userData.categoryId,
+        passwordHash,
       });
       return { success: true };
     }),
@@ -77,6 +83,22 @@ export const appRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Usuario nao encontrado' });
       }
       await db.updateUser(input.id, { role: 'user' });
+      return { success: true };
+    }),
+    changePassword: protectedProcedure.input(z.object({
+      userId: z.number(),
+      newPassword: z.string().min(8),
+    })).mutation(async ({ ctx, input }) => {
+      const user = await db.getUserById(input.userId);
+      if (!user) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Usuario nao encontrado' });
+      }
+      if (ctx.user.role !== 'admin' && ctx.user.id !== input.userId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Voce so pode alterar sua propria senha' });
+      }
+      const { hashPassword } = await import('./password');
+      const passwordHash = await hashPassword(input.newPassword);
+      await db.updateUserPassword(input.userId, passwordHash);
       return { success: true };
     }),
   }),
