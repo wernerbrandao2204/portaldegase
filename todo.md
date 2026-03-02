@@ -509,3 +509,12 @@
 - [x] Atualizar título do card "Serviços" para corresponder ao estilo dos cards "Vídeos" e "Transparência"
 - [x] Atualizar título do card "Documentos em Destaque" para corresponder ao estilo dos cards "Vídeos" e "Transparência"
 - [x] Documentar padrão de estilo para futuros cards
+
+
+## Paginação na Seção de Documentos
+- [x] Atualizar função getFeaturedDocumentsByCategory para suportar paginação (limit, offset)
+- [x] Criar router tRPC para documentos paginados
+- [x] Atualizar FeaturedDocuments com estado de página e botão "Carregar mais"
+- [x] Implementar carregamento progressivo de documentos
+- [x] Testar paginação com múltiplas categorias
+- [x] Adicionar indicador de carregamento ao clicar em "Carregar mais"

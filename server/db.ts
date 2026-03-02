@@ -1608,7 +1608,7 @@ export async function getDocumentCategories() {
     .orderBy(asc(documentCategories.sortOrder));
 }
 
-export async function getFeaturedDocumentsByCategory(categoryId?: number) {
+export async function getFeaturedDocumentsByCategory(categoryId?: number, limit: number = 3, offset: number = 0) {
   const db = await getDb();
   if (!db) return [];
   
@@ -1631,7 +1631,8 @@ export async function getFeaturedDocumentsByCategory(categoryId?: number) {
     .leftJoin(documentCategories, eq(documents.categoryId, documentCategories.id))
     .where(and(...conditions))
     .orderBy(asc(documents.sortOrder), desc(documents.createdAt))
-    .limit(3);
+    .limit(limit)
+    .offset(offset);
 }
 
 
