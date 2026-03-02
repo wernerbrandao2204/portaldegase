@@ -49,7 +49,7 @@ export default function FeaturedDocuments() {
     );
   }
 
-  if (!documents || documents.length === 0) {
+  if (!categories || categories.length === 0) {
     return null;
   }
 
@@ -94,32 +94,38 @@ export default function FeaturedDocuments() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {documents.map((doc: any) => (
-            <a
-              key={doc.id}
-              href={doc.fileUrl}
-              download
-              onClick={() => handleDownload(doc.id)}
-              className="group"
-            >
-              <div className="h-40 rounded-lg p-6 flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:shadow-lg hover:scale-105 cursor-pointer bg-gradient-to-br from-blue-500 to-blue-700 text-white">
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <FileText size={28} className="text-white" />
+        {documents && documents.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Nenhum documento cadastrado nesta categoria</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {documents.map((doc: any) => (
+              <a
+                key={doc.id}
+                href={doc.fileUrl}
+                download
+                onClick={() => handleDownload(doc.id)}
+                className="group"
+              >
+                <div className="h-40 rounded-lg p-6 flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:shadow-lg hover:scale-105 cursor-pointer bg-gradient-to-br from-blue-500 to-blue-700 text-white">
+                  <div className="p-3 bg-white/20 rounded-lg">
+                    <FileText size={28} className="text-white" />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-white font-semibold text-sm group-hover:font-bold transition-all line-clamp-2">
+                      {doc.name}
+                    </h3>
+                    <p className="text-white/80 text-xs mt-1">
+                      {formatFileSize(doc.fileSize)}
+                    </p>
+                    <Download size={14} className="text-white/70 mx-auto mt-2 group-hover:text-white transition-all" />
+                  </div>
                 </div>
-                <div className="text-center">
-                  <h3 className="text-white font-semibold text-sm group-hover:font-bold transition-all line-clamp-2">
-                    {doc.name}
-                  </h3>
-                  <p className="text-white/80 text-xs mt-1">
-                    {formatFileSize(doc.fileSize)}
-                  </p>
-                  <Download size={14} className="text-white/70 mx-auto mt-2 group-hover:text-white transition-all" />
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
+              </a>
+            ))}
+          </div>
+        )}
 
         <div className="flex justify-center">
           <Link href="/documentos">

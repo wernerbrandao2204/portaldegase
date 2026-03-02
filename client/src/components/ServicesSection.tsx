@@ -3,6 +3,11 @@ import { ExternalLink } from "lucide-react";
 
 export default function ServicesSection() {
   const { data: services, isLoading } = trpc.services.list.useQuery();
+  const recordClickMutation = trpc.services.recordClick.useMutation();
+
+  const handleServiceClick = (serviceId: number) => {
+    recordClickMutation.mutate({ serviceId });
+  };
 
   if (isLoading) {
     return (
@@ -35,6 +40,7 @@ export default function ServicesSection() {
               target="_blank"
               rel="noopener noreferrer"
               className="group"
+              onClick={() => handleServiceClick(service.id)}
             >
               <div
                 className="h-32 rounded-lg p-4 flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:shadow-lg hover:scale-105 cursor-pointer"

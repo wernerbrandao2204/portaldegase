@@ -6,7 +6,7 @@ import { trpc } from "@/lib/trpc";
 import RichTextEditor from "@/components/RichTextEditor";
 import ImageUploadButton from "@/components/ImageUploadButton";
 import imageCompression from 'browser-image-compression';
-import { useAutosave } from "@/hooks/useAutosave";
+
 
 function slugify(text: string): string {
   return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -58,27 +58,7 @@ export default function AdminPosts() {
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
 
-  const { isSaving, lastSaved, saveNow } = useAutosave(
-    { title, content, excerpt, featuredImage, categoryId, isFeatured },
-    {
-      key: `post_draft_${editingId || 'new'}`,
-      debounceMs: 3000,
-      onSave: async (data: any) => {
-        if (!title.trim() || !content.trim()) return;
-        await saveDraftMutation.mutateAsync({
-          id: editingId || undefined,
-          title,
-          excerpt,
-          content,
-          featuredImage,
-          categoryId,
-          isFeatured,
-          slug: editingId ? undefined : slugify(title),
-        });
-        setLastSavedTime(new Date());
-      },
-    }
-  );
+  // Autosave desabilitado para evitar mensagens repetidas
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -167,16 +147,6 @@ export default function AdminPosts() {
             <h1 className="text-2xl font-bold" style={{ color: "var(--degase-blue-dark)" }}>
               {editingId ? "Editar Notícia" : "Nova Notícia"}
             </h1>
-            <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-              <Clock size={14} />
-              {isSaving ? (
-                <span>Salvando rascunho...</span>
-              ) : lastSavedTime ? (
-                <span>Último salvamento: {lastSavedTime.toLocaleTimeString('pt-BR')}</span>
-              ) : (
-                <span>Rascunho será salvo automaticamente</span>
-              )}
-            </div>
           </div>
           <div className="flex gap-2">
             {editingId && (
