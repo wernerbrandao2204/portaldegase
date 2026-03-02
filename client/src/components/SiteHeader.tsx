@@ -91,9 +91,7 @@ export default function SiteHeader() {
           {/* Logo DEGASE */}
           <Link href="/" className="flex items-center gap-2 shrink-0" aria-label="DEGASE - Página Inicial">
             <img src="https://www.rj.gov.br/degase/sites/default/files/brasao-degase-300.png" alt="DEGASE - Departamento Geral de Ações Socioeducativas" className="h-12 md:h-14 object-contain" />
-            <div className="hidden sm:block">
-              <div className="text-[9px] opacity-70">Departamento Geral de Ações Socioeducativas</div>
-            </div>
+
           </Link>
 
           {/* Logo Governo RJ - Center */}
