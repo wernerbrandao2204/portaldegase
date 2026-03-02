@@ -21,6 +21,7 @@ export default function AdminDocuments() {
   const [showFeaturedReorder, setShowFeaturedReorder] = useState(false);
   const [editingDocId, setEditingDocId] = useState<number | null>(null);
   const [editingDocName, setEditingDocName] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const utils = trpc.useUtils();
   const { data: documents, isLoading: documentsLoading } = trpc.documents.list.useQuery();
@@ -165,7 +166,12 @@ export default function AdminDocuments() {
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   }
 
-  const documentsByCategory = documents?.reduce((acc, item: any) => {
+  const filteredDocuments = documents?.filter((doc: any) =>
+    doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    doc.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
+
+  const documentsByCategory = filteredDocuments?.reduce((acc, item: any) => {
     if (!item.document_categories) return acc;
     const categoryId = item.document_categories.id;
     if (!acc[categoryId]) {
@@ -182,6 +188,15 @@ export default function AdminDocuments() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold" style={{ color: "var(--degase-blue-dark)" }}>Documentos</h1>
+        <div className="flex gap-2 flex-1 mx-4">
+          <input
+            type="text"
+            placeholder="Buscar documentos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+          />
+        </div>
         <div className="flex gap-2">
           <Link href="/admin/documentos/estatisticas">
             <Button variant="outline" style={{ borderColor: "var(--degase-blue-dark)", color: "var(--degase-blue-dark)" }}>

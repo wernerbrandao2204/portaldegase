@@ -46,8 +46,8 @@ export default function TagSelector({ selectedTags, onTagsChange }: TagSelectorP
       setNewTagName("");
       refetch();
       
-      if (result.id) {
-        handleAddTag(result.id);
+      if (result) {
+        handleAddTag(result);
       }
     } catch (error) {
       toast.error("Erro ao criar tag");

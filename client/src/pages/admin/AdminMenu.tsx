@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, Plus, Edit2, GripVertical } from "lucide-react";
 import { toast } from "sonner";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 export default function AdminMenu() {
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -117,6 +118,23 @@ export default function AdminMenu() {
       parentId: "",
       openInNewTab: false,
     });
+  };
+
+  const handleDragEnd = async (result: any) => {
+    const { source, destination, draggableId } = result;
+    if (!destination) return;
+    if (source.index === destination.index) return;
+    try {
+      const itemId = parseInt(draggableId);
+      const newOrder = destination.index + 1;
+      await reorderMutation.mutateAsync({
+        items: [{ id: itemId, parentId: null, sortOrder: newOrder }],
+      });
+      toast.success("Item reordenado com sucesso");
+      menuQuery.refetch();
+    } catch (error) {
+      toast.error("Erro ao reordenar item");
+    }
   };
 
   const renderMenuItems = (items: any[], level = 0) => {
@@ -293,7 +311,19 @@ export default function AdminMenu() {
           ) : menuQuery.data?.length === 0 ? (
             <p className="text-gray-500">Nenhum item de menu criado ainda</p>
           ) : (
-            <div>{renderMenuItems(menuQuery.data || [])}</div>
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="menu-items">
+                {(provided) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                  >
+                    {renderMenuItems(menuQuery.data || [])}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
           )}
         </CardContent>
       </Card>

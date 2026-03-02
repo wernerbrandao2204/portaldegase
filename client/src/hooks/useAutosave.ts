@@ -26,7 +26,7 @@ export function useAutosave<T>(
   // Atualizar referência de dados
   useEffect(() => {
     dataRef.current = data;
-  }, []);
+  }, [data]);
 
   // Função de salvamento
   const save = useCallback(async () => {
