@@ -5,6 +5,7 @@ import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { AccessibilityPanel } from "./AccessibilityPanel";
 import { DynamicMenu } from "./DynamicMenu";
+import MenuColumnsDropdown from "./MenuColumnsDropdown";
 import { trpc } from "@/lib/trpc";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -174,7 +175,14 @@ export default function SiteHeader() {
         )}
       </div>
 
-      {/* Navigation Menu */}
+      {/* Navigation Menu - Desktop Columns */}
+      <div className="hidden md:block w-full bg-gray-100 border-b border-gray-300">
+        <div className="container py-4">
+          <MenuColumnsDropdown />
+        </div>
+      </div>
+
+      {/* Navigation Menu - Mobile */}
       {menuOpen && (
         <div className="w-full text-white shadow-lg" style={{ backgroundColor: "var(--degase-blue-accent)" }}>
           <div className="container py-4">

@@ -552,3 +552,10 @@
 - [x] Diagnosticar erro ao acessar admin/menu
 - [x] Corrigir erro identificado
 - [x] Testar página AdminMenu
+
+
+## Menu em Formato de Colunas
+- [x] Criar componente MenuColumnsDropdown para exibir menu em colunas
+- [x] Integrar MenuColumnsDropdown no SiteHeader
+- [x] Atualizar AdminMenu para gerenciar categorias principais
+- [x] Testar menu em colunas em diferentes resoluções
