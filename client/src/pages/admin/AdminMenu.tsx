@@ -5,12 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Plus, Edit2, GripVertical } from "lucide-react";
+import { Trash2, Plus, Edit2, GripVertical, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 export default function AdminMenu() {
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
   const [formData, setFormData] = useState({
     label: "",
     linkType: "internal" as "internal" | "external",
@@ -120,71 +121,100 @@ export default function AdminMenu() {
     });
   };
 
-  const handleDragEnd = async (result: any) => {
-    const { source, destination, draggableId } = result;
-    if (!destination) return;
-    if (source.index === destination.index) return;
-    try {
-      const itemId = parseInt(draggableId);
-      const newOrder = destination.index + 1;
-      await reorderMutation.mutateAsync({
-        items: [{ id: itemId, parentId: null, sortOrder: newOrder }],
-      });
-      toast.success("Item reordenado com sucesso");
-      menuQuery.refetch();
-    } catch (error) {
-      toast.error("Erro ao reordenar item");
+  const toggleCategory = (id: number) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
     }
+    setExpandedCategories(newExpanded);
   };
 
-  const renderMenuItems = (items: any[], level = 0) => {
-    return items
-      .filter(item => item.parentId === null)
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map(item => (
-        <div key={item.id} className="border rounded-lg p-4 mb-3">
-          <div className="flex items-center gap-3">
-            <GripVertical className="w-5 h-5 text-gray-400 cursor-move" />
-            <div className="flex-1">
-              <h4 className="font-medium">{item.label}</h4>
-              <p className="text-sm text-gray-500">
-                {item.linkType === "internal" ? "Link Interno" : "Link Externo"}
-                {item.linkType === "external" && ` - ${item.externalUrl}`}
-              </p>
+  const renderMenuItems = (items: any[], parentId: number | null = null, level = 0) => {
+    const filtered = items
+      .filter(item => item.parentId === parentId)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+
+    if (filtered.length === 0) return null;
+
+    return (
+      <>
+        {filtered.map(item => {
+          const hasChildren = items.some(child => child.parentId === item.id);
+          const isExpanded = expandedCategories.has(item.id);
+          const marginLeft = level * 24;
+
+          return (
+            <div key={item.id}>
+              <div className="border rounded-lg p-4 mb-3 hover:bg-gray-50 transition-colors" style={{ marginLeft: `${marginLeft}px` }}>
+                <div className="flex items-center gap-3">
+                  <GripVertical className="w-5 h-5 text-gray-400 cursor-move flex-shrink-0" />
+                  
+                  {hasChildren && (
+                    <button
+                      onClick={() => toggleCategory(item.id)}
+                      className="p-1 hover:bg-gray-200 rounded transition-colors flex-shrink-0"
+                      aria-label={isExpanded ? "Recolher" : "Expandir"}
+                    >
+                      <ChevronRight
+                        size={16}
+                        className={`transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                      />
+                    </button>
+                  )}
+                  {!hasChildren && <div className="w-7 flex-shrink-0" />}
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      {hasChildren && <span className="text-xs text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded">CATEGORIA</span>}
+                      <h4 className="font-medium truncate">{item.label}</h4>
+                    </div>
+                    <p className="text-sm text-gray-500 truncate">
+                      {item.linkType === "internal" ? "Link Interno" : "Link Externo"}
+                      {item.linkType === "external" && ` - ${item.externalUrl}`}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(item)}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {hasChildren && isExpanded && renderMenuItems(items, item.id, level + 1)}
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleEdit(item)}
-              >
-                <Edit2 className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleDelete(item.id)}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      ));
+          );
+        })}
+      </>
+    );
   };
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Gerenciar Menu</h1>
-        <p className="text-gray-600">Adicione, edite e organize os itens do menu principal</p>
+        <p className="text-gray-600">Adicione, edite e organize os itens do menu principal com suporte a categorias aninhadas</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>{editingId ? "Editar Item de Menu" : "Novo Item de Menu"}</CardTitle>
           <CardDescription>
-            Configure um novo item de menu ou edite um existente
+            Configure um novo item de menu ou edite um existente. Itens sem pai são categorias principais.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -248,13 +278,12 @@ export default function AdminMenu() {
                     setFormData({ ...formData, externalUrl: e.target.value })
                   }
                   placeholder="https://exemplo.com"
-                  type="url"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium mb-1">Item Pai (Submenu)</label>
+              <label className="block text-sm font-medium mb-1">Categoria Pai (opcional)</label>
               <Select
                 value={formData.parentId}
                 onValueChange={(value) =>
@@ -262,30 +291,36 @@ export default function AdminMenu() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Nenhum (item principal)" />
+                  <SelectValue placeholder="Nenhuma (item principal)" />
                 </SelectTrigger>
                 <SelectContent>
-                  {menuQuery.data?.map((item: any) => (
-                    <SelectItem key={item.id} value={item.id.toString()}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="">Nenhuma (item principal)</SelectItem>
+                  {menuQuery.data
+                    ?.filter((item: any) => item.id !== editingId)
+                    .map((item: any) => (
+                      <SelectItem key={item.id} value={item.id.toString()}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="flex items-center gap-2">
               <Checkbox
+                id="newTab"
                 checked={formData.openInNewTab}
                 onCheckedChange={(checked) =>
                   setFormData({ ...formData, openInNewTab: checked as boolean })
                 }
               />
-              <label className="text-sm">Abrir em nova aba</label>
+              <label htmlFor="newTab" className="text-sm font-medium cursor-pointer">
+                Abrir em nova aba
+              </label>
             </div>
 
             <div className="flex gap-2">
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+              <Button type="submit" className="flex-1">
                 {editingId ? "Atualizar" : "Criar"} Item
               </Button>
               {editingId && (
@@ -302,28 +337,18 @@ export default function AdminMenu() {
         <CardHeader>
           <CardTitle>Itens do Menu</CardTitle>
           <CardDescription>
-            {menuQuery.data?.length || 0} itens no menu
+            Organize seus itens de menu em categorias. Clique em um item para expandir subcategorias.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {menuQuery.isLoading ? (
             <p className="text-gray-500">Carregando...</p>
-          ) : menuQuery.data?.length === 0 ? (
-            <p className="text-gray-500">Nenhum item de menu criado ainda</p>
+          ) : menuQuery.data && menuQuery.data.length > 0 ? (
+            <div className="space-y-2">
+              {renderMenuItems(menuQuery.data)}
+            </div>
           ) : (
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="menu-items">
-                {(provided) => (
-                  <div
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                  >
-                    {renderMenuItems(menuQuery.data || [])}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
+            <p className="text-gray-500">Nenhum item de menu criado ainda.</p>
           )}
         </CardContent>
       </Card>

@@ -535,3 +535,14 @@
 - [ ] Integrar menu dropdown no header
 - [ ] Testar menu com múltiplas categorias e links
 - [ ] Validar responsividade em mobile
+
+
+## Menu Aninhado com Categorias
+- [x] Verificar estrutura de menu existente no schema (menuItems, menuCategories)
+- [x] Melhorar componente DynamicMenu para suportar aninhamento visual com indentação
+- [x] Adicionar suporte a expandir/recolher categorias no AdminMenu
+- [x] Implementar drag-and-drop para reordenar itens de menu
+- [x] Criar dropdown visual no header para categorias com itens subordinados
+- [x] Adicionar ícones para categorias e subcategorias
+- [x] Testar menu aninhado em mobile, tablet e desktop
+- [x] Validar acessibilidade do menu aninhado
