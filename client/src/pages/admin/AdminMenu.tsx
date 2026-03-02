@@ -294,7 +294,6 @@ export default function AdminMenu() {
                   <SelectValue placeholder="Nenhuma (item principal)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhuma (item principal)</SelectItem>
                   {menuQuery.data
                     ?.filter((item: any) => item.id !== editingId)
                     .map((item: any) => (
