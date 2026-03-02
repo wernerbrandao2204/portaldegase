@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { ArrowLeft, Calendar, Eye, Tag, User } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { SocialShareButtons } from "@/components/SocialShareButtons";
+import Breadcrumb from "@/components/Breadcrumb";
 
 export default function NewsDetail() {
   const params = useParams<{ slug: string }>();
@@ -47,11 +48,18 @@ export default function NewsDetail() {
   }
 
   return (
-    <main id="main-content" className="py-8">
-      <div className="container max-w-4xl">
-        <Link href="/noticias" className="inline-flex items-center gap-1 text-sm mb-6 hover:underline" style={{ color: "var(--degase-blue-light)" }}>
-          <ArrowLeft size={16} /> Voltar para notícias
-        </Link>
+    <>
+      <Breadcrumb
+        items={[
+          { label: "Notícias", href: "/noticias" },
+          { label: post.title, current: true },
+        ]}
+      />
+      <main id="main-content" className="py-8">
+        <div className="container max-w-4xl">
+          <Link href="/noticias" className="inline-flex items-center gap-1 text-sm mb-6 hover:underline" style={{ color: "var(--degase-blue-light)" }}>
+            <ArrowLeft size={16} /> Voltar para notícias
+          </Link>
 
         <article>
           {post.featuredImage && (
@@ -95,6 +103,7 @@ export default function NewsDetail() {
         </article>
       </div>
     </main>
+    </>
   );
 }
 

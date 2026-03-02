@@ -522,3 +522,21 @@
 - [x] Integrar carrossel na página Home
 - [x] Adicionar transições suaves entre slides
 - [x] Testar acessibilidade e navegação por teclado
+
+
+## Breadcrumb de Navegação
+- [x] Criar componente Breadcrumb reutilizável
+- [x] Implementar geração automática de breadcrumb baseada em rota
+- [x] Adicionar breadcrumb em páginas internas (Notícias, Documentos, etc)
+- [x] Estilizar breadcrumb com cores DEGASE
+- [x] Adicionar ícones de navegação
+- [x] Testar breadcrumb em diferentes páginas
+
+## Toggle de Tema Escuro/Claro
+- [x] Criar contexto de tema (ThemeContext)
+- [x] Implementar toggle no header
+- [x] Adicionar persistência de preferência (localStorage)
+- [x] Criar estilos para modo escuro
+- [x] Atualizar cores DEGASE para modo escuro
+- [x] Testar tema em todas as páginas
+- [x] Garantir contraste e acessibilidade
