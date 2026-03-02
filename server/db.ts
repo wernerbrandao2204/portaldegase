@@ -1613,7 +1613,6 @@ export async function getFeaturedDocumentsByCategory(categoryId?: number) {
   if (!db) return [];
   
   const conditions = [
-    eq(documents.isFeatured, true),
     eq(documents.isActive, true)
   ];
   
