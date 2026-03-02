@@ -77,27 +77,8 @@ export function DynamicMenu({
           return (
             <li key={item.id} className="group">
               <div className="flex items-center gap-1">
-                {hasChildren && (
-                  <button
-                    onClick={() => toggleExpanded(item.id)}
-                    className="p-1 hover:bg-white/10 rounded transition-colors flex-shrink-0"
-                    aria-label={isExpanded ? "Recolher submenu" : "Expandir submenu"}
-                    aria-expanded={isExpanded}
-                  >
-                    {isSubmenu ? (
-                      <ChevronRight
-                        size={14}
-                        className={`transition-transform ${isExpanded ? "rotate-90" : ""}`}
-                      />
-                    ) : (
-                      <ChevronDown
-                        size={16}
-                        className={`transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                      />
-                    )}
-                  </button>
-                )}
-                {!hasChildren && <div className={isSubmenu ? "w-5" : "w-7"} />}
+                {/* Remover espaçador para itens sem filhos ou com filhos que estão sempre expandidos */}
+                {!hasChildren && !item.isColumnTitle && <div className={isSubmenu ? "w-5" : "w-7"} />}
 
                 {item.isColumnTitle ? (
                   <div className="flex-1 px-3 py-2 font-bold text-white text-sm">
@@ -113,10 +94,7 @@ export function DynamicMenu({
                         : "hover:bg-white/10 group-hover:bg-white/5"
                     }`}
                   >
-                    <span className="flex items-center gap-1">
-                      {item.label}
-                      {hasChildren && !isSubmenu && <span className="text-xs opacity-60">▼</span>}
-                    </span>
+                    {item.label}
                   </Link>
                 ) : (
                   <a
@@ -133,7 +111,6 @@ export function DynamicMenu({
                     <span className="flex items-center gap-1">
                       {item.label}
                       {item.openInNewTab && <ExternalLink size={12} className="opacity-60" />}
-                      {hasChildren && !isSubmenu && <span className="text-xs opacity-60">▼</span>}
                     </span>
                   </a>
                 )}

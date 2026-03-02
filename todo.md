@@ -593,3 +593,8 @@
 - [x] Testar com dados reais do banco de dados
 - [x] Implementar correção definitiva (mudar de menu.hierarchy para menu.list no SiteHeader)
 - [x] Testar completamente antes de marcar como resolvido
+
+
+## Melhorias do Menu
+- [x] Remover ícone de expandir/recolher dos submenus (sempre visíveis)
+- [x] Testar visualmente as alterações
