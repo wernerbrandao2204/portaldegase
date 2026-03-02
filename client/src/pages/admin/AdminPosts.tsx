@@ -341,7 +341,7 @@ export default function AdminPosts() {
             <div key={i} className="animate-pulse h-16 bg-gray-100 rounded-lg" />
           ))}
         </div>
-      ) : data && data.items.length > 0 ? (
+      ) : data?.items && data.items.length > 0 ? (
         <div className="bg-white rounded-lg border overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-50">
