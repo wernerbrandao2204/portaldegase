@@ -583,3 +583,13 @@
 - [x] Diminuir tamanho da fonte do menu
 - [x] Alinhar horizontalmente os títulos das colunas
 - [x] Testar menu público com itens subordinados visíveis
+
+
+## BUG CRíTICO - Itens Subordinados do Menu Não Aparecem
+- [x] Investigar banco de dados para verificar se itens subordinados existem
+- [x] Verificar se parentId está sendo salvo corretamente no banco
+- [x] Debugar renderização do DynamicMenu com console logs
+- [x] Verificar se a condição de renderização está correta (linha 142)
+- [x] Testar com dados reais do banco de dados
+- [x] Implementar correção definitiva (mudar de menu.hierarchy para menu.list no SiteHeader)
+- [x] Testar completamente antes de marcar como resolvido

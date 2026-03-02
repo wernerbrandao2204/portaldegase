@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, label, parentId, isColumnTitle, isActive FROM menu_items ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Ji8EPjXd3ypEXM.root --database JX8wsWcc9SoDW6P2Z8aZjA --execute SELECT id, label, parentId, isColumnTitle, isActive FROM menu_items ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "label": "Quem Somos",
+      "parentId": "30001",
+      "isColumnTitle": "0",
+      "isActive": "1"
+    },
+    {
+      "id": "2",
+      "label": "Estrutura",
+      "parentId": "NULL",
+      "isColumnTitle": "0",
+      "isActive": "1"
+    },
+    {
+      "id": "3",
+      "label": "Perfil do Diretor",
+      "parentId": "NULL",
+      "isColumnTitle": "0",
+      "isActive": "1"
+    },
+    {
+      "id": "4",
+      "label": "Ouvidoria",
+      "parentId": "NULL",
+      "isColumnTitle": "0",
+      "isActive": "1"
+    },
+    {
+      "id": "30001",
+      "label": "Teste",
+      "parentId": "NULL",
+      "isColumnTitle": "1",
+      "isActive": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tlabel\tparentId\tisColumnTitle\tisActive\n1\tQuem Somos\t30001\t0\t1\n2\tEstrutura\tNULL\t0\t1\n3\tPerfil do Diretor\tNULL\t0\t1\n4\tOuvidoria\tNULL\t0\t1\n30001\tTeste\tNULL\t1\t1\n",
+  "stderr": "",
+  "execution_time_ms": 93
+}

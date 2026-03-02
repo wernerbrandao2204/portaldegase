@@ -17,7 +17,7 @@ export default function SiteHeader() {
   const { highContrast, toggleHighContrast, increaseFontSize, decreaseFontSize } = useAccessibility();
   const { user, isAuthenticated } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { data: menuItems = [] } = trpc.menu.hierarchy.useQuery();
+  const { data: menuItems = [] } = trpc.menu.list.useQuery();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
