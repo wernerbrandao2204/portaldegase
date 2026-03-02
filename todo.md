@@ -598,3 +598,12 @@
 ## Melhorias do Menu
 - [x] Remover ícone de expandir/recolher dos submenus (sempre visíveis)
 - [x] Testar visualmente as alterações
+
+
+## Campo de Ordem nas Categorias do Menu
+- [x] Adicionar campo de ordem no schema de menuItems (reutilizado sortOrder existente)
+- [x] Executar migração do banco de dados (não necessária - campo já existia)
+- [x] Atualizar router tRPC para incluir ordem
+- [x] Atualizar UI do admin para exibir e editar ordem
+- [x] Atualizar DynamicMenu para ordenar por número crescente (já estava ordenando)
+- [x] Testar funcionalidade completa

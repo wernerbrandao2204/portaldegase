@@ -18,6 +18,7 @@ export default function AdminMenu() {
     internalPageId: "",
     externalUrl: "",
     parentId: "",
+    sortOrder: "0",
     openInNewTab: false,
     isColumnTitle: false,
   });
@@ -59,6 +60,7 @@ export default function AdminMenu() {
           internalPageId: formData.internalPageId ? parseInt(formData.internalPageId) : undefined,
           externalUrl: formData.externalUrl || undefined,
           parentId: formData.parentId ? parseInt(formData.parentId) : undefined,
+          sortOrder: parseInt(formData.sortOrder) || 0,
           openInNewTab: formData.openInNewTab,
           isColumnTitle: formData.isColumnTitle,
         });
@@ -71,6 +73,7 @@ export default function AdminMenu() {
           internalPageId: formData.internalPageId ? parseInt(formData.internalPageId) : undefined,
           externalUrl: formData.externalUrl || undefined,
           parentId: formData.parentId ? parseInt(formData.parentId) : undefined,
+          sortOrder: parseInt(formData.sortOrder) || 0,
           openInNewTab: formData.openInNewTab,
           isColumnTitle: formData.isColumnTitle,
         });
@@ -83,6 +86,7 @@ export default function AdminMenu() {
         internalPageId: "",
         externalUrl: "",
         parentId: "",
+        sortOrder: "0",
         openInNewTab: false,
         isColumnTitle: false,
       });
@@ -100,6 +104,7 @@ export default function AdminMenu() {
       internalPageId: item.internalPageId?.toString() || "",
       externalUrl: item.externalUrl || "",
       parentId: item.parentId?.toString() || "",
+      sortOrder: (item.sortOrder || 0).toString(),
       openInNewTab: item.openInNewTab,
       isColumnTitle: item.isColumnTitle || false,
     });
@@ -125,6 +130,7 @@ export default function AdminMenu() {
       internalPageId: "",
       externalUrl: "",
       parentId: "",
+      sortOrder: "0",
       openInNewTab: false,
       isColumnTitle: false,
     });
@@ -178,6 +184,7 @@ export default function AdminMenu() {
                     <div className="flex items-center gap-2">
                       {hasChildren && <span className="text-xs text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded">CATEGORIA</span>}
                       <h4 className="font-medium truncate">{item.label}</h4>
+                      <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded font-semibold">#{item.sortOrder}</span>
                     </div>
                     <p className="text-sm text-gray-500 truncate">
                       {item.linkType === "internal" ? "Link Interno" : "Link Externo"}
@@ -312,6 +319,20 @@ export default function AdminMenu() {
                     ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Ordem de Exibição</label>
+              <Input
+                type="number"
+                min="0"
+                value={formData.sortOrder}
+                onChange={(e) =>
+                  setFormData({ ...formData, sortOrder: e.target.value })
+                }
+                placeholder="0"
+              />
+              <p className="text-xs text-gray-500 mt-1">Número menor = exibido primeiro. Deixe em branco para 0.</p>
             </div>
 
             <div className="flex items-center gap-2">
