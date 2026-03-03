@@ -19,6 +19,7 @@ export default function AdminSettings() {
     contactPhone: "",
     favicon: "",
     logo: "",
+    emailDomains: "",
   });
 
   const getAllConfig = trpc.admin.getAllSiteConfig.useQuery();
@@ -46,6 +47,7 @@ export default function AdminSettings() {
         contactPhone: configMap["contactPhone"] || "",
         favicon: configMap["favicon"] || "",
         logo: configMap["logo"] || "",
+        emailDomains: configMap["emailDomains"] || "",
       });
     }
   }, [getAllConfig.data]);
@@ -163,6 +165,29 @@ export default function AdminSettings() {
                 placeholder="Texto do rodapé..."
                 rows={4}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Email Domains */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Domínios de E-mail Aceitos</CardTitle>
+            <CardDescription>Especifique quais domínios de e-mail são aceitos para cadastro de usuários</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <label className="block text-sm font-medium mb-2">Domínios (um por linha)</label>
+              <Textarea
+                value={settings.emailDomains}
+                onChange={(e) => handleChange("emailDomains", e.target.value)}
+                placeholder="rj.gov.br\ndegase.rj.gov.br\nnovodegase.rj.gov.br"
+                rows={5}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Deixe em branco para aceitar qualquer domínio. Digite um domínio por linha (ex: rj.gov.br).
+              </p>
             </div>
           </CardContent>
         </Card>

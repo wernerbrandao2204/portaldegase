@@ -1,4 +1,3 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Link, useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import {
@@ -8,6 +7,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -30,6 +30,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, loading, isAuthenticated, logout } = useAuth();
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Permissões de menu são apenas para o menu público, não para o menu CMS (admin)
+  // Todos os usuários autenticados têm acesso a todas as páginas do admin
 
   if (loading) {
     return (

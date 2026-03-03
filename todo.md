@@ -685,3 +685,9 @@
 - [x] Adicionar testes para menu permissions (menu-permissions.test.ts)
 - [ ] Atualizar lógica de exibição do menu baseado em permissões (próxima fase)
 - [ ] Testar controle de acesso completo com diferentes perfis
+
+
+## Correções de Permissões e Configurações
+- [x] Aplicar permissões apenas ao menu CMS (admin), menu público acessível para todos
+- [x] Corrigir contador de downloads de documentos
+- [x] Adicionar configuração de domínios de e-mail aceitos em admin/configurações

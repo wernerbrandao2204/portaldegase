@@ -1289,11 +1289,12 @@ export async function getMostDownloadedDocuments(limit = 5) {
   
   return db.select({
     ...getTableColumns(documents),
-    downloadCount: sql<number>`(SELECT COUNT(*) FROM ${documentDownloads} WHERE ${documentDownloads.documentId} = ${documents.id})`,
+    downloadCount: documentDownloadStats.totalDownloads,
   })
     .from(documents)
+    .leftJoin(documentDownloadStats, eq(documents.id, documentDownloadStats.documentId))
     .where(eq(documents.isActive, true))
-    .orderBy(sql`(SELECT COUNT(*) FROM ${documentDownloads} WHERE ${documentDownloads.documentId} = ${documents.id}) DESC`)
+    .orderBy(desc(documentDownloadStats.totalDownloads))
     .limit(limit);
 }
 
