@@ -1308,5 +1308,101 @@ export const appRouter = router({
       }
     }),
   }),
+
+  password: router({
+    requestReset: publicProcedure.input(z.object({ email: z.string().email() })).mutation(async ({ input }) => {
+      const user = await db.getUserByEmail(input.email);
+      if (!user) {
+        // Não revelar se email existe ou não (segurança)
+        return { success: true, message: 'Se o email existir, um link de reset será enviado' };
+      }
+
+      // Gerar token de reset
+      const crypto = await import('crypto');
+      const token = crypto.randomBytes(32).toString('hex');
+      await db.createPasswordResetToken(user.id, token, 24);
+
+      // TODO: Enviar email com link de reset
+      console.log(`[Password Reset] Token para ${user.email}: ${token}`);
+
+      return { success: true, message: 'Se o email existir, um link de reset será enviado' };
+    }),
+
+    validateToken: publicProcedure.input(z.object({ token: z.string() })).query(async ({ input }) => {
+      const resetToken = await db.getPasswordResetToken(input.token);
+      if (!resetToken) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Token inválido ou expirado' });
+      }
+      return { valid: true, userId: resetToken.userId };
+    }),
+
+    resetPassword: publicProcedure.input(z.object({
+      token: z.string(),
+      newPassword: z.string().min(8),
+    })).mutation(async ({ input }) => {
+      const resetToken = await db.getPasswordResetToken(input.token);
+      if (!resetToken) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Token inválido ou expirado' });
+      }
+
+      const { hashPassword } = await import('./password');
+      const passwordHash = await hashPassword(input.newPassword);
+
+      await db.updateUserPassword(resetToken.userId, passwordHash);
+      await db.markPasswordResetTokenAsUsed(resetToken.id);
+
+      // Log de auditoria
+      const user = await db.getUserById(resetToken.userId);
+      if (user) {
+        await db.createAuditLog({
+          userId: resetToken.userId,
+          action: 'reset_password',
+          entityType: 'user',
+          entityId: resetToken.userId,
+          status: 'success',
+        });
+      }
+
+      return { success: true, message: 'Senha alterada com sucesso' };
+    }),
+  }),
+
+  audit: router({
+    logs: adminProcedure.input(z.object({
+      userId: z.number().optional(),
+      action: z.string().optional(),
+      entityType: z.string().optional(),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
+      limit: z.number().default(50),
+      offset: z.number().default(0),
+    })).query(async ({ input }) => {
+      return db.getAuditLogs({
+        userId: input.userId,
+        action: input.action,
+        entityType: input.entityType,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        limit: input.limit,
+        offset: input.offset,
+      });
+    }),
+
+    count: adminProcedure.input(z.object({
+      userId: z.number().optional(),
+      action: z.string().optional(),
+      entityType: z.string().optional(),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
+    })).query(async ({ input }) => {
+      return db.getAuditLogCount({
+        userId: input.userId,
+        action: input.action,
+        entityType: input.entityType,
+        startDate: input.startDate,
+        endDate: input.endDate,
+      });
+    }),
+  }),
 });
 export type AppRouter = typeof appRouter;

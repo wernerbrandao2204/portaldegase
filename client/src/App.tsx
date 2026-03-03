@@ -40,6 +40,8 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminDocuments from "./pages/admin/AdminDocuments";
 import AdminDocumentStats from "./pages/admin/AdminDocumentStats";
 import AdminMenu from "./pages/admin/AdminMenu";
+import { ResetPassword } from "./pages/ResetPassword";
+import { AdminAudit } from "./pages/admin/AdminAudit";
 
 // Layout components
 import SiteHeader from "./components/SiteHeader";
@@ -110,6 +112,10 @@ function Router() {
       <Route path="/admin/documents">{() => <AdminPage component={AdminDocuments} />}</Route>
       <Route path="/admin/documents/stats">{() => <AdminPage component={AdminDocumentStats} />}</Route>
       <Route path="/admin/menu">{() => <AdminPage component={AdminMenu} />}</Route>
+      <Route path="/admin/auditoria">{() => <AdminPage component={AdminAudit} />}</Route>
+
+      {/* Public routes - continued */}
+      <Route path="/reset-senha">{() => <PublicLayout><ResetPassword /></PublicLayout>}</Route>
 
       {/* 404 */}
       <Route path="/404" component={NotFound} />

@@ -162,6 +162,13 @@
       "when": 1772477822373,
       "tag": "0022_kind_drax",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "5",
+      "when": 1772487631920,
+      "tag": "0023_broken_stone_men",
+      "breakpoints": true
     }
   ]
 }

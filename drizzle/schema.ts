@@ -607,3 +607,37 @@ export type SocialShare = typeof socialShares.$inferSelect;
 export type InsertSocialShare = typeof socialShares.$inferInsert;
 
 
+/**
+ * Password Reset Tokens - para recuperação de senha
+ */
+export const passwordResetTokens = mysqlTable("password_reset_tokens", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
+/**
+ * Audit Logs - rastreamento de ações de usuários
+ */
+export const auditLogs = mysqlTable("audit_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  action: varchar("action", { length: 64 }).notNull(), // 'create_user', 'update_user', 'delete_user', 'change_password', etc
+  entityType: varchar("entityType", { length: 64 }).notNull(), // 'user', 'post', 'category', etc
+  entityId: int("entityId"), // ID da entidade afetada
+  changes: text("changes"), // JSON com antes/depois dos dados
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  userAgent: varchar("userAgent", { length: 500 }),
+  status: varchar("status", { length: 20 }).default("success").notNull(), // 'success', 'failed'
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = typeof auditLogs.$inferInsert;

@@ -1,4 +1,4 @@
-import { eq, like, or, desc, asc, and, sql, inArray, ilike, gte, lte, getTableColumns } from "drizzle-orm";
+import { eq, like, or, desc, asc, and, sql, inArray, ilike, gte, lte, getTableColumns, isNull, gt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser, users,
@@ -31,6 +31,8 @@ import {
   menuItems, InsertMenuItem,
   postViewLimits, InsertPostViewLimit,
   socialShares, InsertSocialShare,
+  passwordResetTokens, InsertPasswordResetToken,
+  auditLogs, InsertAuditLog,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -449,6 +451,13 @@ export async function updateUserPassword(id: number, passwordHash: string) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, id));
+}
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
 }
 
 
@@ -2057,4 +2066,123 @@ export async function getEngagementByDay(days: number = 30) {
   });
   
   return Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+
+/**
+ * Password Reset Functions
+ */
+export async function createPasswordResetToken(userId: number, token: string, expiresInHours: number = 24) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + expiresInHours);
+  
+  return db.insert(passwordResetTokens).values({
+    userId,
+    token,
+    expiresAt,
+  });
+}
+
+export async function getPasswordResetToken(token: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  
+  const result = await db.select().from(passwordResetTokens).where(
+    and(eq(passwordResetTokens.token, token), isNull(passwordResetTokens.usedAt), gt(passwordResetTokens.expiresAt, new Date()))
+  ).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function markPasswordResetTokenAsUsed(tokenId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  
+  return db.update(passwordResetTokens).set({ usedAt: new Date() }).where(eq(passwordResetTokens.id, tokenId));
+}
+
+/**
+ * Audit Log Functions
+ */
+export async function createAuditLog(data: InsertAuditLog) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  
+  return db.insert(auditLogs).values(data);
+}
+
+export async function getAuditLogs(filters?: {
+  userId?: number;
+  action?: string;
+  entityType?: string;
+  startDate?: Date;
+  endDate?: Date;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  
+  let query: any = db.select().from(auditLogs);
+  
+  if (filters?.userId) {
+    query = query.where(eq(auditLogs.userId, filters.userId));
+  }
+  if (filters?.action) {
+    query = query.where(eq(auditLogs.action, filters.action));
+  }
+  if (filters?.entityType) {
+    query = query.where(eq(auditLogs.entityType, filters.entityType));
+  }
+  if (filters?.startDate) {
+    query = query.where(gte(auditLogs.createdAt, filters.startDate));
+  }
+  if (filters?.endDate) {
+    query = query.where(lte(auditLogs.createdAt, filters.endDate));
+  }
+  
+  query = query.orderBy(desc(auditLogs.createdAt));
+  
+  if (filters?.limit) {
+    query = query.limit(filters.limit);
+  }
+  if (filters?.offset) {
+    query = query.offset(filters.offset);
+  }
+  
+  return query;
+}
+
+export async function getAuditLogCount(filters?: {
+  userId?: number;
+  action?: string;
+  entityType?: string;
+  startDate?: Date;
+  endDate?: Date;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+  
+  let query: any = db.select({ count: sql<number>`COUNT(*)` }).from(auditLogs);
+  
+  if (filters?.userId) {
+    query = query.where(eq(auditLogs.userId, filters.userId));
+  }
+  if (filters?.action) {
+    query = query.where(eq(auditLogs.action, filters.action));
+  }
+  if (filters?.entityType) {
+    query = query.where(eq(auditLogs.entityType, filters.entityType));
+  }
+  if (filters?.startDate) {
+    query = query.where(gte(auditLogs.createdAt, filters.startDate));
+  }
+  if (filters?.endDate) {
+    query = query.where(lte(auditLogs.createdAt, filters.endDate));
+  }
+  
+  const result = await query;
+  return result[0]?.count || 0;
 }

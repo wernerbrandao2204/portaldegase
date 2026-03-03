@@ -629,3 +629,27 @@
 - [x] Implementar função de alterar senha para usuários existentes
 - [x] Adicionar restrições de acesso para Contribuidores (apenas alterar própria senha)
 - [x] Testar funcionalidades de gerenciamento de senhas
+
+
+## Sistema de Recuperação de Senha
+- [x] Adicionar tabela de tokens de reset no banco de dados
+- [x] Implementar router tRPC para solicitar reset de senha
+- [x] Implementar router tRPC para validar e aplicar novo reset
+- [x] Criar página de reset de senha (/reset-senha)
+- [ ] Implementar envio de email com link de reset (TODO futuro)
+- [ ] Testar fluxo completo de recuperação
+
+## Sistema de Auditoria de Ações de Usuários
+- [x] Criar tabela de logs de auditoria no banco de dados
+- [x] Implementar logging de criação de usuários
+- [x] Implementar logging de edição de usuários
+- [x] Implementar logging de deleção de usuários
+- [x] Implementar logging de alteração de senhas
+- [x] Criar interface de visualização de logs
+- [x] Adicionar filtros por data, tipo de ação e usuário
+- [ ] Testar auditoria completa
+
+## Autenticação por Dois Fatores (2FA) - FUTURO
+- [ ] Pesquisar bibliotecas de 2FA (TOTP, SMS)
+- [ ] Planejar implementação para contas administrativas
+- [ ] Definir fluxo de ativação/desativação de 2FA
