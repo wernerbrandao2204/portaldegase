@@ -1,4 +1,4 @@
-import { eq, like, or, desc, asc, and, sql, inArray, ilike, gte, lte, getTableColumns, isNull, gt } from "drizzle-orm";
+import { eq, like, or, desc, asc, and, sql, inArray, ilike, gte, lte, getTableColumns, isNull, gt, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser, users,
@@ -33,6 +33,7 @@ import {
   socialShares, InsertSocialShare,
   passwordResetTokens, InsertPasswordResetToken,
   auditLogs, InsertAuditLog,
+  menuAccessPermissions, InsertMenuAccessPermission,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -2185,4 +2186,76 @@ export async function getAuditLogCount(filters?: {
   
   const result = await query;
   return result[0]?.count || 0;
+}
+
+
+// Menu Access Permissions
+export async function getMenuPermissions(role: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(menuAccessPermissions).where(eq(menuAccessPermissions.role, role as any));
+}
+
+export async function getMenuPermissionsByRole(role: string) {
+  const db = await getDb();
+  if (!db) return { allowedMenuItems: [], deniedMenuItems: [] };
+  
+  const permissions = await db.select().from(menuAccessPermissions)
+    .where(eq(menuAccessPermissions.role, role as any));
+  
+  const allowedMenuItems = permissions.filter(p => p.canAccess).map(p => p.menuItemId);
+  const deniedMenuItems = permissions.filter(p => !p.canAccess).map(p => p.menuItemId);
+  
+  return { allowedMenuItems, deniedMenuItems };
+}
+
+export async function setMenuPermission(role: string, menuItemId: number, canAccess: boolean) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Check if permission already exists
+  const existing = await db.select().from(menuAccessPermissions)
+    .where(and(eq(menuAccessPermissions.role, role as any), eq(menuAccessPermissions.menuItemId, menuItemId)));
+  
+  if (existing.length > 0) {
+    // Update existing
+    return await db.update(menuAccessPermissions)
+      .set({ canAccess })
+      .where(and(eq(menuAccessPermissions.role, role as any), eq(menuAccessPermissions.menuItemId, menuItemId)));
+  } else {
+    // Create new
+    return await db.insert(menuAccessPermissions).values({
+      role: role as 'user' | 'admin' | 'contributor',
+      menuItemId,
+      canAccess,
+    });
+  }
+}
+
+export async function deleteMenuPermission(role: string, menuItemId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  return await db.delete(menuAccessPermissions)
+    .where(and(eq(menuAccessPermissions.role, role as any), eq(menuAccessPermissions.menuItemId, menuItemId)));
+}
+
+export async function updateMenuPermissionsBatch(role: string, menuItemIds: number[], canAccess: boolean) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Delete existing permissions for this role
+  await db.delete(menuAccessPermissions).where(eq(menuAccessPermissions.role, role as any));
+  
+  // Insert new permissions
+  if (menuItemIds.length > 0) {
+    const values = menuItemIds.map(menuItemId => ({
+      role: role as 'user' | 'admin' | 'contributor',
+      menuItemId,
+      canAccess,
+    }));
+    
+    return await db.insert(menuAccessPermissions).values(values);
+  }
 }

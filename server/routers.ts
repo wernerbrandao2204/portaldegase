@@ -1350,18 +1350,29 @@ export const appRouter = router({
 
       await db.updateUserPassword(resetToken.userId, passwordHash);
       await db.markPasswordResetTokenAsUsed(resetToken.id);
-
-      // Log de auditoria
+      
+      // Enviar notificação de segurança
       const user = await db.getUserById(resetToken.userId);
       if (user) {
-        await db.createAuditLog({
-          userId: resetToken.userId,
-          action: 'reset_password',
-          entityType: 'user',
-          entityId: resetToken.userId,
-          status: 'success',
-        });
+        const { subject, html } = (await import('./email')).getSecurityNotificationEmailTemplate(
+          'Senha Alterada',
+          'Sua senha foi alterada com sucesso. Se você não realizou esta ação, entre em contato com o suporte imediatamente.',
+          {
+            'Data/Hora': new Date().toLocaleString('pt-BR'),
+            'Email': user.email || 'N/A',
+          }
+        );
+        // TODO: Enviar email de notificação de segurança
       }
+
+      // Log de auditoria
+      await db.createAuditLog({
+        userId: resetToken.userId,
+        action: 'reset_password',
+        entityType: 'user',
+        entityId: resetToken.userId,
+        status: 'success',
+      });
 
       return { success: true, message: 'Senha alterada com sucesso' };
     }),
@@ -1402,6 +1413,30 @@ export const appRouter = router({
         startDate: input.startDate,
         endDate: input.endDate,
       });
+    }),
+  }),
+
+  menuPermissions: router({
+    getByRole: adminProcedure.input(z.object({ role: z.string() })).query(async ({ input }) => {
+      return await db.getMenuPermissionsByRole(input.role);
+    }),
+
+    setPermission: adminProcedure.input(z.object({
+      role: z.string(),
+      menuItemId: z.number(),
+      canAccess: z.boolean(),
+    })).mutation(async ({ input }) => {
+      await db.setMenuPermission(input.role, input.menuItemId, input.canAccess);
+      return { success: true };
+    }),
+
+    updateBatch: adminProcedure.input(z.object({
+      role: z.string(),
+      menuItemIds: z.array(z.number()),
+      canAccess: z.boolean(),
+    })).mutation(async ({ input }) => {
+      await db.updateMenuPermissionsBatch(input.role, input.menuItemIds, input.canAccess);
+      return { success: true };
     }),
   }),
 });

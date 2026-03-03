@@ -641,3 +641,20 @@ export const auditLogs = mysqlTable("audit_logs", {
 
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = typeof auditLogs.$inferInsert;
+
+
+/**
+ * Menu access permissions by role
+ * Define which menu items each role can access
+ */
+export const menuAccessPermissions = mysqlTable("menu_access_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  role: mysqlEnum("role", ["user", "admin", "contributor"]).notNull(),
+  menuItemId: int("menuItemId").notNull(),
+  canAccess: boolean("canAccess").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MenuAccessPermission = typeof menuAccessPermissions.$inferSelect;
+export type InsertMenuAccessPermission = typeof menuAccessPermissions.$inferInsert;

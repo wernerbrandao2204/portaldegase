@@ -169,6 +169,13 @@
       "when": 1772487631920,
       "tag": "0023_broken_stone_men",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1772534348243,
+      "tag": "0024_complete_famine",
+      "breakpoints": true
     }
   ]
 }

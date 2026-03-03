@@ -653,3 +653,35 @@
 - [ ] Pesquisar bibliotecas de 2FA (TOTP, SMS)
 - [ ] Planejar implementação para contas administrativas
 - [ ] Definir fluxo de ativação/desativação de 2FA
+
+
+## Integração de Email para Reset de Senha
+- [ ] Configurar variáveis de ambiente para serviço de email (SendGrid ou AWS SES)
+- [ ] Implementar função de envio de email com template HTML
+- [ ] Adicionar link de reset no email com token válido
+- [ ] Testar envio de email de reset
+
+## Notificações de Segurança por Email
+- [ ] Implementar notificação quando usuário altera sua senha
+- [ ] Implementar notificação quando admin cria novo usuário
+- [ ] Implementar notificação quando admin deleta usuário
+- [ ] Implementar notificação quando admin altera permissões de usuário
+- [ ] Testar notificações de segurança
+
+## Exportação de Relatórios de Auditoria
+- [ ] Implementar export de logs em formato CSV
+- [ ] Implementar export de logs em formato PDF
+- [ ] Adicionar botão de export na interface de auditoria
+- [ ] Permitir filtros aplicados no export
+- [ ] Testar exportação completa
+
+
+## Controle de Acesso Administrativo do Menu
+- [x] Adicionar tabela de permissões de menu no banco de dados (menuAccessPermissions)
+- [x] Implementar routers tRPC para gerenciar permissões por perfil (getByRole, setPermission, updateBatch)
+- [x] Criar página /admin/permissoes para administrador (AdminMenuAccess.tsx)
+- [x] Interface para selecionar itens de menu por perfil com checkboxes
+- [x] Implementar funções de banco de dados para gerenciar permissões
+- [x] Adicionar testes para menu permissions (menu-permissions.test.ts)
+- [ ] Atualizar lógica de exibição do menu baseado em permissões (próxima fase)
+- [ ] Testar controle de acesso completo com diferentes perfis
