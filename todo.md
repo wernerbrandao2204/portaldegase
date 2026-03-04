@@ -8,6 +8,12 @@
 - [x] Configurar variáveis de ambiente (.env)
 - [x] Iniciar servidor de desenvolvimento
 - [x] Expor porta para acesso público
+- [x] Build de produção do frontend e backend
+- [x] Configuração de persistência do MySQL
+- [x] Implementação do PM2 para gerenciamento de processos
+- [x] Configuração de inicialização automática (startup script)
+- [x] Monitoramento de logs configurado
+
 
 
 ## Banco de Dados e Schema
