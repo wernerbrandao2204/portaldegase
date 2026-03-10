@@ -176,6 +176,13 @@
       "when": 1772534348243,
       "tag": "0024_complete_famine",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1772940980749,
+      "tag": "0025_curious_vengeance",
+      "breakpoints": true
     }
   ]
 }

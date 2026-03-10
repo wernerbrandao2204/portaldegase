@@ -12,6 +12,7 @@ export default function AdminVideos() {
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [description, setDescription] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
+  const [visibility, setVisibility] = useState<"site" | "intranet" | "both">("site");
 
   const utils = trpc.useUtils();
   const [thumbnailUrl, setThumbnailUrl] = useState("");
@@ -32,9 +33,9 @@ export default function AdminVideos() {
     onSuccess: () => { utils.videos.list.invalidate(); toast.success("Vídeo excluído!"); },
   });
 
-  function resetForm() { setShowForm(false); setEditingId(null); setTitle(""); setYoutubeUrl(""); setDescription(""); setIsFeatured(false); setThumbnailUrl(""); setThumbnailPreview(null); }
+  function resetForm() { setShowForm(false); setEditingId(null); setTitle(""); setYoutubeUrl(""); setDescription(""); setIsFeatured(false); setThumbnailUrl(""); setThumbnailPreview(null); setVisibility("site"); }
 
-  function editVideo(v: any) { setEditingId(v.id); setTitle(v.title); setYoutubeUrl(v.youtubeUrl); setDescription(v.description || ""); setIsFeatured(v.isFeatured); setThumbnailUrl(v.thumbnailUrl || ""); setShowForm(true); }
+  function editVideo(v: any) { setEditingId(v.id); setTitle(v.title); setYoutubeUrl(v.youtubeUrl); setDescription(v.description || ""); setIsFeatured(v.isFeatured); setThumbnailUrl(v.thumbnailUrl || ""); setVisibility(v.visibility || "site"); setShowForm(true); }
 
   async function handleThumbnailUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -81,8 +82,8 @@ export default function AdminVideos() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !youtubeUrl.trim()) { toast.error("Título e URL do YouTube são obrigatórios."); return; }
-    if (editingId) { updateMutation.mutate({ id: editingId, title, youtubeUrl, description: description || undefined, thumbnailUrl: thumbnailUrl || undefined, isFeatured }); }
-    else { createMutation.mutate({ title, youtubeUrl, description: description || undefined, thumbnailUrl: thumbnailUrl || undefined, isFeatured }); }
+    if (editingId) { updateMutation.mutate({ id: editingId, title, youtubeUrl, description: description || undefined, thumbnailUrl: thumbnailUrl || undefined, isFeatured, visibility }); }
+    else { createMutation.mutate({ title, youtubeUrl, description: description || undefined, thumbnailUrl: thumbnailUrl || undefined, isFeatured, visibility }); }
   }
 
   return (
@@ -121,9 +122,23 @@ export default function AdminVideos() {
             {thumbnailUrl && <p className="text-xs text-green-600 mt-1">✓ Thumbnail enviado</p>}
             <p className="text-xs text-gray-500 mt-1">Formatos: JPG, PNG, WebP | Tamanho ideal: 1280x720 pixels | Será comprimido automaticamente</p>
           </div>
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="videoFeatured" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />
-            <label htmlFor="videoFeatured" className="text-sm">Destaque na página inicial</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="videoFeatured" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />
+              <label htmlFor="videoFeatured" className="text-sm">Destaque na página inicial</label>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Visibilidade</label>
+              <select
+                value={visibility}
+                onChange={(e) => setVisibility(e.target.value as any)}
+                className="w-full px-3 py-2 border rounded-md text-sm"
+              >
+                <option value="site">Site DEGASE somente</option>
+                <option value="intranet">Intranet somente</option>
+                <option value="both">Site e Intranet</option>
+              </select>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button type="submit" style={{ backgroundColor: "var(--degase-blue-dark)" }}>{editingId ? "Atualizar" : "Adicionar"}</Button>

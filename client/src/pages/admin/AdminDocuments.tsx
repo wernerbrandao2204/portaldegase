@@ -22,6 +22,7 @@ export default function AdminDocuments() {
   const [editingDocId, setEditingDocId] = useState<number | null>(null);
   const [editingDocName, setEditingDocName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [visibility, setVisibility] = useState<"site" | "intranet" | "both">("site");
 
   const utils = trpc.useUtils();
   const { data: documents, isLoading: documentsLoading } = trpc.documents.list.useQuery();
@@ -100,6 +101,7 @@ export default function AdminDocuments() {
     setDocumentDescription("");
     setSelectedCategory(null);
     setDocumentFile(null);
+    setVisibility("site");
   }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -133,13 +135,14 @@ export default function AdminDocuments() {
     }
 
     setIsUploading(true);
-
     try {
       const buffer = await documentFile.arrayBuffer();
-      const result = await uploadMutation.mutateAsync({
+      // Usando o novo endpoint trpc.upload.file para documentos
+      const result = await utils.client.upload.file.mutate({
         file: new Uint8Array(buffer),
         filename: documentFile.name,
         mimetype: documentFile.type,
+        category: 'documents',
       });
 
       await createDocumentMutation.mutateAsync({
@@ -150,6 +153,7 @@ export default function AdminDocuments() {
         fileKey: documentFile.name,
         fileSize: documentFile.size,
         mimeType: documentFile.type,
+        visibility,
       });
     } catch (error) {
       toast.error("Erro ao fazer upload do documento.");
@@ -292,6 +296,18 @@ export default function AdminDocuments() {
                 Arquivo selecionado: {documentFile.name} ({formatFileSize(documentFile.size)})
               </p>
             )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Visibilidade</label>
+            <select
+              value={visibility}
+              onChange={(e) => setVisibility(e.target.value as any)}
+              className="w-full px-3 py-2 border rounded-md"
+            >
+              <option value="site">Site DEGASE somente</option>
+              <option value="intranet">Intranet somente</option>
+              <option value="both">Site e Intranet</option>
+            </select>
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={isUploading} style={{ backgroundColor: "var(--degase-blue-dark)" }}>

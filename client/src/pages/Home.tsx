@@ -1,10 +1,11 @@
-import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 import { ArrowRight, Play, Building2, FileText, Users, Scale, DollarSign, HelpCircle, Database, Shield, Handshake, ClipboardList, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMemo, useState, useEffect } from "react";
 import ServicesSection from "@/components/ServicesSection";
 import FeaturedDocuments from "@/components/FeaturedDocuments";
+import { LoginBar } from "@/components/LoginBar";
+import { trpc } from "@/lib/trpc";
 
 function BannerSection() {
   const { data: banners } = trpc.banners.list.useQuery();
@@ -128,67 +129,79 @@ function NewsSection() {
   return (
     <section aria-labelledby="news-heading" className="py-10 bg-white">
       <div className="container">
-        {/* Top 3 news in grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {topNews.map((item: any) => (
-            <article key={item.id} className="group">
-              <Link href={`/noticias/${item.slug}`} className="block">
-                <div className="aspect-[4/3] bg-gray-200 rounded-lg overflow-hidden mb-3">
-                  {item.featuredImage ? (
-                    <img src={item.featuredImage} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: "var(--degase-blue-dark)" }}>
-                      <FileText className="text-white/30" size={48} />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* News column - 3 cols */}
+          <div className="md:col-span-3">
+            {/* Top 3 news in grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {topNews.map((item: any) => (
+                <article key={item.id} className="group">
+                  <Link href={`/noticias/${item.slug}`} className="block">
+                    <div className="aspect-[4/3] bg-gray-200 rounded-lg overflow-hidden mb-3">
+                      {item.featuredImage ? (
+                        <img src={item.featuredImage} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: "var(--degase-blue-dark)" }}>
+                          <FileText className="text-white/30" size={48} />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <h3 className="font-bold text-sm md:text-base leading-tight group-hover:underline" style={{ color: "var(--degase-blue-dark)" }}>
-                  {item.title}
-                </h3>
-                <p className="text-xs md:text-sm text-gray-600 mt-2 line-clamp-3">{item.excerpt}</p>
-              </Link>
-            </article>
-          ))}
-        </div>
-
-        {/* Bottom 2 news */}
-        {bottomNews.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {bottomNews.map((item: any) => (
-              <article key={item.id} className="group flex gap-4">
-                <div className="w-40 h-28 bg-gray-200 rounded-lg overflow-hidden shrink-0">
-                  {item.featuredImage ? (
-                    <img src={item.featuredImage} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: "var(--degase-blue-dark)" }}>
-                      <FileText className="text-white/30" size={32} />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <Link href={`/noticias/${item.slug}`}>
-                    <h3 className="font-bold text-sm leading-tight group-hover:underline" style={{ color: "var(--degase-blue-dark)" }}>
+                    <h3 className="font-bold text-sm md:text-base leading-tight group-hover:underline" style={{ color: "var(--degase-blue-dark)" }}>
                       {item.title}
                     </h3>
+                    <p className="text-xs md:text-sm text-gray-600 mt-2 line-clamp-3">{item.excerpt}</p>
                   </Link>
-                  <p className="text-xs text-gray-600 mt-1 line-clamp-3">{item.excerpt}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+                </article>
+              ))}
+            </div>
 
-        <div className="text-center">
-          <Link href="/noticias">
-            <Button variant="outline" className="border-2 font-semibold text-xs uppercase tracking-wider" style={{ borderColor: "var(--degase-blue-dark)", color: "var(--degase-blue-dark)" }}>
-              Veja a lista completa de notícias
-            </Button>
-          </Link>
+            {/* Bottom 2 news */}
+            {bottomNews.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                {bottomNews.map((item: any) => (
+                  <article key={item.id} className="group flex gap-4">
+                    <div className="w-40 h-28 bg-gray-200 rounded-lg overflow-hidden shrink-0">
+                      {item.featuredImage ? (
+                        <img src={item.featuredImage} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: "var(--degase-blue-dark)" }}>
+                          <FileText className="text-white/30" size={32} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <Link href={`/noticias/${item.slug}`}>
+                        <h3 className="font-bold text-sm leading-tight group-hover:underline" style={{ color: "var(--degase-blue-dark)" }}>
+                          {item.title}
+                        </h3>
+                      </Link>
+                      <p className="text-xs text-gray-600 mt-1 line-clamp-3">{item.excerpt}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            <div className="text-center">
+              <Link href="/noticias">
+                <Button variant="outline" className="border-2 font-semibold text-xs uppercase tracking-wider" style={{ borderColor: "var(--degase-blue-dark)", color: "var(--degase-blue-dark)" }}>
+                  Veja a lista completa de notícias
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Login Card - 1 col */}
+          <div className="md:col-span-1">
+            <div className="sticky top-20">
+            </div>
+          </div>
         </div>
       </div>
     </section>
   );
 }
+
 
 function VideosSection() {
   const { data: videos } = trpc.videos.list.useQuery();
@@ -391,6 +404,7 @@ function UnitsSection() {
 export default function Home() {
   return (
     <main id="main-content" role="main">
+      <LoginBar />
       <BannerSection />
       <NewsSection />
       <ServicesSection />

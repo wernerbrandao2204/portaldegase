@@ -28,6 +28,7 @@ export default function AdminPosts() {
   const [authorId, setAuthorId] = useState<number | undefined>();
   const [status, setStatus] = useState<"draft" | "published" | "archived">("draft");
   const [isFeatured, setIsFeatured] = useState(false);
+  const [visibility, setVisibility] = useState<"site" | "intranet" | "both">("site");
   
   // Filter state
   const [filterAuthorId, setFilterAuthorId] = useState<number | undefined>();
@@ -110,6 +111,7 @@ export default function AdminPosts() {
     setAuthorId(undefined);
     setStatus("draft");
     setIsFeatured(false);
+    setVisibility("site");
   }
 
   function editPost(post: any) {
@@ -123,6 +125,7 @@ export default function AdminPosts() {
     setAuthorId(post.authorId || undefined);
     setStatus(post.status);
     setIsFeatured(post.isFeatured);
+    setVisibility(post.visibility || "site");
     setShowEditor(true);
   }
 
@@ -132,7 +135,7 @@ export default function AdminPosts() {
       toast.error("Título e conteúdo são obrigatórios.");
       return;
     }
-    const data = { title, content, excerpt: excerpt || undefined, featuredImage: featuredImage || undefined, categoryId, authorId, status, isFeatured };
+    const data = { title, content, excerpt: excerpt || undefined, featuredImage: featuredImage || undefined, categoryId, authorId, status, isFeatured, visibility };
     if (editingId) {
       updateMutation.mutate({ id: editingId, ...data });
     } else {
@@ -226,6 +229,18 @@ export default function AdminPosts() {
                 <option value="draft">Rascunho</option>
                 <option value="published">Publicado</option>
                 <option value="archived">Arquivado</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Visibilidade</label>
+              <select
+                value={visibility}
+                onChange={(e) => setVisibility(e.target.value as any)}
+                className="w-full px-3 py-2 border rounded-md"
+              >
+                <option value="site">Site DEGASE somente</option>
+                <option value="intranet">Intranet somente</option>
+                <option value="both">Site e Intranet</option>
               </select>
             </div>
           </div>

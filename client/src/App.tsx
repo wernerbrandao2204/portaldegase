@@ -43,6 +43,9 @@ import AdminMenu from "./pages/admin/AdminMenu";
 import AdminMenuAccess from "./pages/admin/AdminMenuAccess";
 import { ResetPassword } from "./pages/ResetPassword";
 import { AdminAudit } from "./pages/admin/AdminAudit";
+import AdminLogin from "./pages/AdminLogin";
+import Intranet from "./pages/Intranet";
+import AdminIntranet from "./pages/admin/AdminIntranet";
 
 // Layout components
 import SiteHeader from "./components/SiteHeader";
@@ -95,7 +98,11 @@ function Router() {
       <Route path="/pagina/:slug">{() => <PublicPage component={Page} />}</Route>
       <Route path="/documentos">{() => <PublicPage component={Documents} />}</Route>
 
+      {/* Intranet routes */}
+      <Route path="/intranet">{() => <Intranet />}</Route>
+
       {/* Admin routes */}
+      <Route path="/admin/login">{() => <AdminLogin />}</Route>
       <Route path="/admin">{() => <AdminPage component={AdminDashboard} />}</Route>
       <Route path="/admin/posts">{() => <AdminPage component={AdminPosts} />}</Route>
       <Route path="/admin/categorias">{() => <AdminPage component={AdminCategories} />}</Route>
@@ -115,6 +122,7 @@ function Router() {
       <Route path="/admin/menu">{() => <AdminPage component={AdminMenu} />}</Route>
       <Route path="/admin/permissoes">{() => <AdminPage component={AdminMenuAccess} />}</Route>
       <Route path="/admin/auditoria">{() => <AdminPage component={AdminAudit} />}</Route>
+      <Route path="/admin/intranet">{() => <AdminPage component={AdminIntranet} />}</Route>
 
       {/* Public routes - continued */}
       <Route path="/reset-senha">{() => <PublicLayout><ResetPassword /></PublicLayout>}</Route>

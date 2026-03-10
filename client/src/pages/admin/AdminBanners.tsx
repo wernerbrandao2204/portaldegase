@@ -16,6 +16,7 @@ export default function AdminBanners() {
   const [isUploading, setIsUploading] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [visibility, setVisibility] = useState<"site" | "intranet" | "both">("site");
 
   const utils = trpc.useUtils();
   const { data: banners } = trpc.banners.list.useQuery();
@@ -34,9 +35,9 @@ export default function AdminBanners() {
 
 
 
-  function resetForm() { setShowForm(false); setEditingId(null); setTitle(""); setSubtitle(""); setImageUrl(""); setLinkUrl(""); setIsActive(true); }
+  function resetForm() { setShowForm(false); setEditingId(null); setTitle(""); setSubtitle(""); setImageUrl(""); setLinkUrl(""); setIsActive(true); setVisibility("site"); }
 
-  function editBanner(b: any) { setEditingId(b.id); setTitle(b.title); setSubtitle(b.subtitle || ""); setImageUrl(b.imageUrl); setLinkUrl(b.linkUrl || ""); setIsActive(b.isActive); setShowForm(true); }
+  function editBanner(b: any) { setEditingId(b.id); setTitle(b.title); setSubtitle(b.subtitle || ""); setImageUrl(b.imageUrl); setLinkUrl(b.linkUrl || ""); setIsActive(b.isActive); setVisibility(b.visibility || "site"); setShowForm(true); }
 
   const uploadMutation = trpc.upload.image.useMutation();
 
@@ -89,8 +90,8 @@ export default function AdminBanners() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !imageUrl.trim()) { toast.error("Título e imagem são obrigatórios."); return; }
-    if (editingId) { updateMutation.mutate({ id: editingId, title, imageUrl, linkUrl: linkUrl || undefined, isActive }); }
-    else { createMutation.mutate({ title, imageUrl, linkUrl: linkUrl || undefined, isActive }); }
+    if (editingId) { updateMutation.mutate({ id: editingId, title, imageUrl, linkUrl: linkUrl || undefined, isActive, visibility }); }
+    else { createMutation.mutate({ title, imageUrl, linkUrl: linkUrl || undefined, isActive, visibility }); }
   }
 
   return (
@@ -129,9 +130,23 @@ export default function AdminBanners() {
             </div>
             <div><label className="block text-sm font-medium mb-1">URL do Link</label><input type="url" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} className="w-full px-3 py-2 border rounded-md" /></div>
           </div>
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="bannerActive" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
-            <label htmlFor="bannerActive" className="text-sm">Ativo</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="bannerActive" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
+              <label htmlFor="bannerActive" className="text-sm">Ativo</label>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Visibilidade</label>
+              <select
+                value={visibility}
+                onChange={(e) => setVisibility(e.target.value as any)}
+                className="w-full px-3 py-2 border rounded-md text-sm"
+              >
+                <option value="site">Site DEGASE somente</option>
+                <option value="intranet">Intranet somente</option>
+                <option value="both">Site e Intranet</option>
+              </select>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button type="submit" style={{ backgroundColor: "var(--degase-blue-dark)" }}>{editingId ? "Atualizar" : "Criar"}</Button>

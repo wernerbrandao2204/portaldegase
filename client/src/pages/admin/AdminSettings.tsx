@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Database, Download } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { LogoUploadField } from "@/components/LogoUploadField";
@@ -11,6 +11,9 @@ import { FaviconUploadField } from "@/components/FaviconUploadField";
 
 export default function AdminSettings() {
   const [isSaving, setIsSaving] = useState(false);
+  const [backupFormat, setBackupFormat] = useState<'sql' | 'csv' | 'xlsx'>('sql');
+  const [selectedTables, setSelectedTables] = useState<string[]>([]);
+  const [showTableSelection, setShowTableSelection] = useState(false);
   const [settings, setSettings] = useState({
     siteTitle: "",
     siteDescription: "",
@@ -30,6 +33,28 @@ export default function AdminSettings() {
     },
     onError: (error) => {
       toast.error(`Erro: ${error.message}`);
+    },
+  });
+
+  const getBackupMutation = trpc.admin.getDatabaseDump.useMutation({
+    onSuccess: (data) => {
+      let mimeType = 'text/plain';
+      if (backupFormat === 'csv') mimeType = 'text/csv';
+      if (backupFormat === 'xlsx') mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      
+      const blob = new Blob([data.data], { type: mimeType });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = data.filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("Backup gerado com sucesso!");
+    },
+    onError: (error) => {
+      toast.error(`Erro ao gerar backup: ${error.message}`);
     },
   });
 
@@ -189,6 +214,38 @@ export default function AdminSettings() {
                 Deixe em branco para aceitar qualquer domínio. Digite um domínio por linha (ex: rj.gov.br).
               </p>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Database Backup */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database size={20} />
+              Banco de Dados
+            </CardTitle>
+            <CardDescription>Gerencie o backup e a manutenção do banco de dados</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-700">
+                O backup gera um arquivo SQL contendo todas as tabelas e dados do portal. 
+                Recomenda-se realizar backups periódicos antes de grandes alterações.
+              </p>
+            </div>
+            <Button 
+              onClick={() => getBackupMutation.mutate()} 
+              disabled={getBackupMutation.isPending}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              {getBackupMutation.isPending ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Download size={16} />
+              )}
+              Baixar Backup SQL (.sql)
+            </Button>
           </CardContent>
         </Card>
 

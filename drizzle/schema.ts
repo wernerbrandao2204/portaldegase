@@ -70,6 +70,7 @@ export const posts = mysqlTable("posts", {
   scheduledAt: timestamp("scheduledAt"), // Data/hora agendada para publicação
   isScheduled: boolean("isScheduled").default(false).notNull(),
   isFeatured: boolean("isFeatured").default(false).notNull(),
+  visibility: mysqlEnum("visibility", ["site", "intranet", "both"]).default("site").notNull(), // Visibilidade: site, intranet ou ambos
   viewCount: int("viewCount").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -106,6 +107,7 @@ export const pages = mysqlTable("pages", {
   showInMenu: boolean("showInMenu").default(false).notNull(),
   menuLabel: varchar("menuLabel", { length: 128 }),
   authorId: int("authorId"),
+  visibility: mysqlEnum("visibility", ["site", "intranet", "both"]).default("site").notNull(), // Visibilidade: site, intranet ou ambos
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -124,6 +126,7 @@ export const banners = mysqlTable("banners", {
   linkUrl: text("linkUrl"),
   sortOrder: int("sortOrder").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
+  visibility: mysqlEnum("visibility", ["site", "intranet", "both"]).default("site").notNull(), // Visibilidade: site, intranet ou ambos
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -143,6 +146,7 @@ export const videos = mysqlTable("videos", {
   isFeatured: boolean("isFeatured").default(false).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
   sortOrder: int("sortOrder").default(0).notNull(),
+  visibility: mysqlEnum("visibility", ["site", "intranet", "both"]).default("site").notNull(), // Visibilidade: site, intranet ou ambos
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -368,6 +372,7 @@ export const services = mysqlTable("services", {
   color: varchar("color", { length: 7 }).default("#0066CC").notNull(), // Cor do card em hex
   sortOrder: int("sortOrder").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
+  visibility: mysqlEnum("visibility", ["site", "intranet", "both"]).default("site").notNull(), // Visibilidade: site, intranet ou ambos
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -439,6 +444,7 @@ export const documents = mysqlTable("documents", {
   isActive: boolean("isActive").default(true).notNull(),
   isFeatured: boolean("isFeatured").default(false).notNull(), // Destaque na home
   sortOrder: int("sortOrder").default(0).notNull(), // Ordem de exibição em destaque
+  visibility: mysqlEnum("visibility", ["site", "intranet", "both"]).default("site").notNull(), // Visibilidade: site, intranet ou ambos
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

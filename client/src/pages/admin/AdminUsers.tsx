@@ -21,6 +21,8 @@ export default function AdminUsers() {
   const [newPassword, setNewPassword] = useState("");
   const [categoryId, setCategoryId] = useState<number | undefined>();
   const [role, setRole] = useState<"user" | "admin" | "contributor">("user");
+  const [isImporting, setIsImporting] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
 
   const listUsers = trpc.users.list.useQuery();
   const listCategories = trpc.categories.list.useQuery();
@@ -63,6 +65,21 @@ export default function AdminUsers() {
     onSuccess: () => {
       toast.success("Usuário deletado com sucesso!");
       listUsers.refetch();
+    },
+    onError: (error: any) => {
+      toast.error(`Erro: ${error.message}`);
+    },
+  });
+
+  const importCSVMutation = trpc.users.importCSV.useMutation({
+    onSuccess: (result) => {
+      toast.success(`${result.success} usuários importados com sucesso!`);
+      if (result.failed > 0) {
+        toast.warning(`${result.failed} usuários falharam na importação`);
+      }
+      listUsers.refetch();
+      setIsImporting(false);
+      setCsvFile(null);
     },
     onError: (error: any) => {
       toast.error(`Erro: ${error.message}`);
@@ -150,6 +167,21 @@ export default function AdminUsers() {
     }
   };
 
+  const handleImportCSV = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!csvFile) {
+      toast.error("Selecione um arquivo CSV");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const csvContent = event.target?.result as string;
+      importCSVMutation.mutate({ csvContent });
+    };
+    reader.readAsText(csvFile);
+  };
+
   if (listUsers.isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -181,12 +213,39 @@ export default function AdminUsers() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Usuários do Sistema</h2>
               {!isContributor && (
-                <Button onClick={handleCreateClick} size="sm" style={{ backgroundColor: "var(--degase-blue-dark)" }}>
-                  <Plus size={16} className="mr-2" />
-                  Novo Usuário
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={() => setIsImporting(!isImporting)} size="sm" style={{ backgroundColor: "#4a7c59" }}>
+                    Importar CSV
+                  </Button>
+                  <Button onClick={handleCreateClick} size="sm" style={{ backgroundColor: "var(--degase-blue-dark)" }}>
+                    <Plus size={16} className="mr-2" />
+                    Novo Usuário
+                  </Button>
+                </div>
               )}
             </div>
+            {isImporting && (
+              <form onSubmit={handleImportCSV} className="mb-4 p-4 bg-gray-50 rounded border">
+                <div className="mb-3">
+                  <label className="block text-sm font-medium mb-2">Selecione arquivo CSV</label>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                    className="w-full border rounded p-2 text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">Formato esperado: email, name (opcional), functionalId (opcional), category (opcional)</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit" size="sm" style={{ backgroundColor: "#4a7c59" }}>
+                    Importar
+                  </Button>
+                  <Button type="button" onClick={() => setIsImporting(false)} size="sm" variant="outline">
+                    Cancelar
+                  </Button>
+                </div>
+              </form>
+            )}
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
@@ -362,21 +421,20 @@ export default function AdminUsers() {
                     </select>
                   </div>
 
-                  {role === "contributor" && (
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Categoria *</label>
-                      <select
-                        value={categoryId ?? ""}
-                        onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : undefined)}
-                        className="w-full px-3 py-2 border rounded-md text-sm"
-                      >
-                        <option value="">Selecionar categoria</option>
-                        {listCategories.data?.map((cat: any) => (
-                          <option key={cat.id} value={cat.id}>{cat.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Categoria {role === "contributor" ? "*" : "(Opcional)"}</label>
+                    <select
+                      value={categoryId ?? ""}
+                      onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : undefined)}
+                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      required={role === "contributor"}
+                    >
+                      <option value="">Selecionar categoria</option>
+                      {listCategories.data?.map((cat: any) => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </>
               ) : editingId ? (
                 <>

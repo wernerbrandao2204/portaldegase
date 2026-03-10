@@ -24,6 +24,23 @@ export const appRouter = router({
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+    login: publicProcedure.input(z.object({
+      email: z.string().email(),
+      password: z.string().min(1),
+    })).mutation(async ({ input, ctx }) => {
+      const user = await db.getUserByEmail(input.email);
+      if (!user || !user.passwordHash) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'E-mail ou senha invalidos' });
+      }
+      const { verifyPassword } = await import('./password');
+      const isValid = await verifyPassword(input.password, user.passwordHash);
+      if (!isValid) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'E-mail ou senha invalidos' });
+      }
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.setHeader('Set-Cookie', `${COOKIE_NAME}=${user.id}; Path=/; HttpOnly; SameSite=Lax${cookieOptions.secure ? '; Secure' : ''}`);
+      return { user, success: true };
+    }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
@@ -84,6 +101,13 @@ export const appRouter = router({
       }
       await db.updateUser(input.id, { role: 'user' });
       return { success: true };
+    }),
+    importCSV: adminProcedure.input(z.object({
+      csvContent: z.string().min(1),
+    })).mutation(async ({ input }) => {
+      const { importUsersFromCSV } = await import('./csv-importer');
+      const result = await importUsersFromCSV(input.csvContent);
+      return result;
     }),
     changePassword: protectedProcedure.input(z.object({
       userId: z.number(),
@@ -165,6 +189,7 @@ export const appRouter = router({
       status: z.enum(['draft', 'published', 'archived']).optional(),
       limit: z.number().default(10),
       offset: z.number().default(0),
+      visibility: z.enum(['site', 'intranet', 'both']).optional(),
     })).query(async ({ input }) => db.listPosts(input)),
     getBySlug: publicProcedure.input(z.object({ slug: z.string() })).query(async ({ input }) => db.getPostBySlug(input.slug)),
     getById: publicProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => db.getPostById(input.id)),
@@ -602,27 +627,42 @@ export const appRouter = router({
   }),
 
   upload: router({
-    image: editorProcedure.input(z.object({
+    file: editorProcedure.input(z.object({
       file: z.instanceof(Uint8Array),
       filename: z.string(),
       mimetype: z.string(),
+      category: z.enum(['images', 'documents', 'banners']).default('images'),
     })).mutation(async ({ input }) => {
-      const maxSize = 10 * 1024 * 1024;
+      const maxSize = 50 * 1024 * 1024; // 50MB
       if (input.file.length > maxSize) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Arquivo muito grande. Maximo 10MB.' });
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Arquivo muito grande. Maximo 50MB.' });
       }
       try {
         const { storagePut } = await import('./storage');
         const timestamp = Date.now();
         const randomStr = Math.random().toString(36).substring(2, 8);
-        const ext = input.filename.split('.').pop() || 'jpg';
-        const fileKey = `degase-cms/images/${timestamp}-${randomStr}.${ext}`;
+        const ext = input.filename.split('.').pop() || 'bin';
+        const fileKey = `${input.category}/${timestamp}-${randomStr}.${ext}`;
         const { url } = await storagePut(fileKey, input.file, input.mimetype);
         return { url, success: true };
       } catch (error) {
         console.error('[Upload] Erro ao fazer upload:', error);
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Erro ao fazer upload da imagem' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Erro ao fazer upload do arquivo' });
       }
+    }),
+    // Mantendo compatibilidade com o frontend atual
+    image: editorProcedure.input(z.object({
+      file: z.instanceof(Uint8Array),
+      filename: z.string(),
+      mimetype: z.string(),
+    })).mutation(async ({ input }) => {
+      const { storagePut } = await import('./storage');
+      const timestamp = Date.now();
+      const randomStr = Math.random().toString(36).substring(2, 8);
+      const ext = input.filename.split('.').pop() || 'jpg';
+      const fileKey = `images/${timestamp}-${randomStr}.${ext}`;
+      const { url } = await storagePut(fileKey, input.file, input.mimetype);
+      return { url, success: true };
     }),
   }),
 
@@ -642,6 +682,19 @@ export const appRouter = router({
       categoryId: z.number().optional(),
     })).mutation(async ({ input }) => db.updateUserRole(input.id, input.role, input.categoryId)),
     deleteUser: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => db.deleteUser(input.id)),
+    getDatabaseDump: adminProcedure.mutation(async () => {
+      try {
+        const dump = await db.getDatabaseDump();
+        return {
+          success: true,
+          data: dump,
+          filename: `backup-portaldegase-${new Date().toISOString().split('T')[0]}.sql`,
+        };
+      } catch (error) {
+        console.error('[Admin] Erro ao gerar dump:', error);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Erro ao gerar backup do banco de dados' });
+      }
+    }),
   }),
 
   themes: router({
@@ -1387,6 +1440,10 @@ export const appRouter = router({
       endDate: z.date().optional(),
       limit: z.number().default(50),
       offset: z.number().default(0),
+      visibility: z.enum(['site', 'intranet', 'both']).optional(),
+      visibility: z.enum(['site', 'intranet', 'both']).optional(),
+      visibility: z.enum(['site', 'intranet', 'both']).optional(),
+      visibility: z.enum(['site', 'intranet', 'both']).optional(),
     })).query(async ({ input }) => {
       return db.getAuditLogs({
         userId: input.userId,

@@ -3,7 +3,7 @@ import { getLoginUrl } from "@/const";
 import {
   LayoutDashboard, FileText, FolderOpen, BookOpen,
   Image, Video, Building2, Shield, Settings, LogOut,
-  Menu, X, ArrowLeft, File, List
+  Menu, X, ArrowLeft, File, List, Layers
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ const navItems = [
   { href: "/admin/servicos/analytics", label: "Analytics de Serviços", icon: Building2 },
   { href: "/admin/documentos", label: "Documentos", icon: File },
   { href: "/admin/menu", label: "Menu", icon: List },
+  { href: "/admin/intranet", label: "Intranet", icon: Layers },
   { href: "/admin/unidades", label: "Unidades", icon: Building2 },
   { href: "/admin/transparencia", label: "Transparência", icon: Shield },
   { href: "/admin/usuarios", label: "Usuários", icon: Shield },
@@ -43,23 +44,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
-          <Shield size={48} className="mx-auto mb-4" style={{ color: "var(--degase-blue-dark)" }} />
-          <h1 className="text-2xl font-bold mb-2" style={{ color: "var(--degase-blue-dark)" }}>Acesso Restrito</h1>
-          <p className="text-gray-600 mb-6">Faça login para acessar o painel administrativo do DEGASE.</p>
-          <a href={getLoginUrl()}>
-            <Button style={{ backgroundColor: "var(--degase-blue-dark)" }}>Fazer Login</Button>
-          </a>
-          <div className="mt-4">
-            <Link href="/" className="text-sm hover:underline" style={{ color: "var(--degase-blue-light)" }}>
-              <ArrowLeft size={14} className="inline mr-1" /> Voltar ao site
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
+    // Redirecionar para a página de login
+    if (typeof window !== "undefined") {
+      window.location.href = "/admin/login";
+    }
+    return null;
   }
 
   return (
@@ -84,7 +73,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
         </div>
 
-        <nav className="p-3 space-y-1" aria-label="Menu administrativo">
+        <nav className="p-3 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }} aria-label="Menu administrativo">
           {navItems.map((item) => {
             const isActive = location === item.href || (item.href !== "/admin" && location.startsWith(item.href));
             return (

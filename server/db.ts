@@ -85,6 +85,20 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateUser(id: number, data: Partial<InsertUser>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(users).set(data).where(eq(users.id, id));
+  return db.select().from(users).where(eq(users.id, id)).limit(1).then(r => r[0]);
+}
+
 // ==================== CATEGORIES ====================
 export async function listCategories() {
   const db = await getDb();
@@ -140,13 +154,14 @@ export async function deleteTag(id: number) {
 }
 
 // ==================== POSTS ====================
-export async function listPosts(opts: { status?: string; categoryId?: number; limit?: number; offset?: number; search?: string; featured?: boolean } = {}) {
+export async function listPosts(opts: { status?: string; categoryId?: number; limit?: number; offset?: number; search?: string; featured?: boolean; visibility?: string } = {}) {
   const db = await getDb();
   if (!db) return { items: [], total: 0 };
   const conditions = [];
   if (opts.status) conditions.push(eq(posts.status, opts.status as any));
   if (opts.categoryId) conditions.push(eq(posts.categoryId, opts.categoryId));
   if (opts.featured) conditions.push(eq(posts.isFeatured, true));
+  if (opts.visibility) conditions.push(inArray(posts.visibility, opts.visibility === "both" ? ["both", "site", "intranet"] : [opts.visibility, "both"]));
   if (opts.search) {
     const searchLower = opts.search.toLowerCase();
     conditions.push(or(
@@ -436,12 +451,6 @@ export async function updateUserRole(id: number, role: string, categoryId?: numb
   await db.update(users).set({ role: role as any, categoryId }).where(eq(users.id, id));
 }
 
-export async function updateUser(id: number, data: Partial<InsertUser>) {
-  const db = await getDb();
-  if (!db) throw new Error("DB not available");
-  await db.update(users).set({ ...data, updatedAt: new Date() }).where(eq(users.id, id));
-}
-
 export async function deleteUser(id: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
@@ -453,14 +462,6 @@ export async function updateUserPassword(id: number, passwordHash: string) {
   if (!db) throw new Error("DB not available");
   await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, id));
 }
-
-export async function getUserByEmail(email: string) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
-}
-
 
 // ===== POST HISTORY FUNCTIONS =====
 
@@ -890,15 +891,15 @@ export async function createService(service: InsertService) {
   return result;
 }
 
-export async function listServices(activeOnly = true) {
+export async function listServices(activeOnly = true, visibility?: string) {
   const db = await getDb();
   if (!db) return [];
   
-  const query = db.select().from(services).orderBy(asc(services.sortOrder));
-  if (activeOnly) {
-    return query.where(eq(services.isActive, true));
-  }
-  return query;
+  const conditions = [];
+  if (activeOnly) conditions.push(eq(services.isActive, true));
+  if (visibility) conditions.push(inArray(services.visibility, visibility === "both" ? ["both", "site", "intranet"] : [visibility, "both"]));
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+  return db.select().from(services).where(where).orderBy(asc(services.sortOrder));
 }
 
 export async function getServiceById(id: number) {
@@ -2258,5 +2259,31 @@ export async function updateMenuPermissionsBatch(role: string, menuItemIds: numb
     }));
     
     return await db.insert(menuAccessPermissions).values(values);
+  }
+}
+
+// ==================== BACKUP ====================
+export async function getDatabaseDump(): Promise<string> {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) throw new Error("DATABASE_URL not set");
+  
+  // Parse MySQL URL: mysql://user:password@host:port/database
+  const url = new URL(dbUrl);
+  const host = url.hostname;
+  const port = url.port || "3306";
+  const user = url.username;
+  const password = url.password;
+  const database = url.pathname.replace("/", "");
+  
+  const { execSync } = await import("child_process");
+  
+  try {
+    // Usar mysqldump para gerar o backup
+    const command = `mysqldump -h ${host} -P ${port} -u ${user} ${password ? `-p${password}` : ""} ${database}`;
+    const dump = execSync(command, { encoding: "utf8", maxBuffer: 100 * 1024 * 1024 }); // 100MB buffer
+    return dump;
+  } catch (error) {
+    console.error("[Database] Dump failed:", error);
+    throw new Error("Falha ao gerar backup do banco de dados");
   }
 }

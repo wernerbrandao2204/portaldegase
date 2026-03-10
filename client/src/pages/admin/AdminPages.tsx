@@ -20,6 +20,7 @@ export default function AdminPages() {
   const [showInMenu, setShowInMenu] = useState(false);
   const [menuLabel, setMenuLabel] = useState("");
   const [tempPageId, setTempPageId] = useState<number | null>(null);
+  const [visibility, setVisibility] = useState<"site" | "intranet" | "both">("site");
 
   const utils = trpc.useUtils();
   const { data: pages } = trpc.pages.list.useQuery();
@@ -47,17 +48,17 @@ export default function AdminPages() {
 
 
   function resetForm() {
-    setShowEditor(false); setEditingId(null); setTempPageId(null); setTitle(""); setSlug(""); setContent(""); setExcerpt(""); setStatus("draft"); setShowInMenu(false); setMenuLabel("");
+    setShowEditor(false); setEditingId(null); setTempPageId(null); setTitle(""); setSlug(""); setContent(""); setExcerpt(""); setStatus("draft"); setShowInMenu(false); setMenuLabel(""); setVisibility("site");
   }
 
   function editPage(page: any) {
-    setEditingId(page.id); setTitle(page.title); setSlug(page.slug); setContent(page.content); setExcerpt(page.excerpt || ""); setStatus(page.status); setShowInMenu(page.showInMenu); setMenuLabel(page.menuLabel || ""); setShowEditor(true);
+    setEditingId(page.id); setTitle(page.title); setSlug(page.slug); setContent(page.content); setExcerpt(page.excerpt || ""); setStatus(page.status); setShowInMenu(page.showInMenu); setMenuLabel(page.menuLabel || ""); setVisibility(page.visibility || "site"); setShowEditor(true);
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !content.trim()) { toast.error("Título e conteúdo são obrigatórios."); return; }
-    const data = { title, slug: slug || slugify(title), content, excerpt: excerpt || undefined, status: status as any, showInMenu, menuLabel: menuLabel || undefined };
+    const data = { title, slug: slug || slugify(title), content, excerpt: excerpt || undefined, status: status as any, showInMenu, menuLabel: menuLabel || undefined, visibility };
     if (editingId) { updateMutation.mutate({ id: editingId, ...data }); }
     else { 
       // Para nova página, criar com status draft primeiro para permitir adicionar blocos
@@ -101,7 +102,14 @@ export default function AdminPages() {
                 <option value="published">Publicado</option>
               </select>
             </div>
-
+            <div>
+              <label className="block text-sm font-medium mb-1">Visibilidade</label>
+              <select value={visibility} onChange={(e) => setVisibility(e.target.value as any)} className="w-full px-3 py-2 border rounded-md">
+                <option value="site">Site DEGASE somente</option>
+                <option value="intranet">Intranet somente</option>
+                <option value="both">Site e Intranet</option>
+              </select>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">Conteúdo *</label>

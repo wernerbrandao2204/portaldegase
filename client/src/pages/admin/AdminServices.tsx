@@ -23,6 +23,7 @@ export default function AdminServices() {
     color: "#0066CC",
     sortOrder: 0,
     isActive: true,
+    visibility: "site" as "site" | "intranet" | "both",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,6 +49,7 @@ export default function AdminServices() {
       color: service.color,
       sortOrder: service.sortOrder,
       isActive: service.isActive,
+      visibility: service.visibility || "site",
     });
     setEditingId(service.id);
     setIsFormOpen(true);
@@ -72,6 +74,7 @@ export default function AdminServices() {
       color: "#0066CC",
       sortOrder: 0,
       isActive: true,
+      visibility: "site",
     });
     setEditingId(null);
     setIsFormOpen(false);
@@ -193,17 +196,31 @@ export default function AdminServices() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={formData.isActive}
-                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                className="w-4 h-4"
-              />
-              <label htmlFor="isActive" className="text-sm font-medium">
-                Ativo
-              </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="isActive" className="text-sm font-medium">
+                  Ativo
+                </label>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Visibilidade</label>
+                <select
+                  value={formData.visibility}
+                  onChange={(e) => setFormData({ ...formData, visibility: e.target.value as any })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="site">Site DEGASE somente</option>
+                  <option value="intranet">Intranet somente</option>
+                  <option value="both">Site e Intranet</option>
+                </select>
+              </div>
             </div>
 
             <div className="flex gap-2">
