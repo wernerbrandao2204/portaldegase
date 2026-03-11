@@ -1,0 +1,24 @@
+services:
+  app:
+    build: .
+    container_name: portal_app
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+  db:
+    image: mysql:8.0
+    container_name: portal_db_container
+    restart: always
+    environment:
+      MYSQL_DATABASE: portal_db
+      MYSQL_USER: degase
+      MYSQL_PASSWORD: "Degase@2026"
+      MYSQL_ROOT_PASSWORD: "Degase@2026"
+    volumes:
+      - db_data:/var/lib/mysql
+volumes:
+  db_data:
