@@ -14,10 +14,10 @@ export default function Intranet() {
     onSuccess: () => setLocation("/"),
   });
 
-  const { data: posts } = trpc.posts.list.useQuery();
-  const { data: banners } = trpc.banners.list.useQuery();
-  const { data: videos } = trpc.videos.list.useQuery();
-  const { data: documents } = trpc.documents.list.useQuery();
+  const { data: posts } = trpc.posts.list.useQuery({ visibility: "intranet" });
+  const { data: banners } = trpc.banners.list.useQuery({ visibility: "intranet" });
+  const { data: videos } = trpc.videos.list.useQuery({ visibility: "intranet" });
+  const { data: documents } = trpc.documents.list.useQuery({ visibility: "intranet" });
   const { data: services } = trpc.services.listAll.useQuery();
 
   useEffect(() => {
@@ -35,11 +35,11 @@ export default function Intranet() {
     return null;
   }
 
-  // Filtrar conteúdo para Intranet (intranet ou both)
-  const intranetPosts = posts?.filter(p => p.visibility === "intranet" || p.visibility === "both") || [];
-  const intranetBanners = banners?.filter(b => b.visibility === "intranet" || b.visibility === "both") || [];
-  const intranetVideos = videos?.filter(v => v.visibility === "intranet" || v.visibility === "both") || [];
-  const intranetDocuments = documents?.filter(d => d.visibility === "intranet" || d.visibility === "both") || [];
+  // O conteúdo já vem filtrado pelo backend para incluir "intranet" ou "both"
+  const intranetPosts = posts?.items || [];
+  const intranetBanners = banners || [];
+  const intranetVideos = videos || [];
+  const intranetDocuments = documents || [];
   const intranetServices = services?.filter(s => s.visibility === "intranet" || s.visibility === "both") || [];
 
   return (

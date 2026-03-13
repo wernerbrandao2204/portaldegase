@@ -115,16 +115,17 @@ export default function AdminPosts() {
   }
 
   function editPost(post: any) {
+    if (!post) return;
     setShowEditor(true);
     setEditingId(post.id);
-    setTitle(post.title);
-    setContent(post.content);
+    setTitle(post.title || "");
+    setContent(post.content || "");
     setExcerpt(post.excerpt || "");
     setFeaturedImage(post.featuredImage || "");
     setCategoryId(post.categoryId || undefined);
     setAuthorId(post.authorId || undefined);
-    setStatus(post.status);
-    setIsFeatured(post.isFeatured);
+    setStatus(post.status || "draft");
+    setIsFeatured(!!post.isFeatured);
     setVisibility(post.visibility || "site");
     setShowEditor(true);
   }
@@ -295,8 +296,8 @@ export default function AdminPosts() {
           <div className="mt-8 p-4 bg-gray-50 rounded-lg border">
             <h2 className="text-lg font-bold mb-4">Historico de Versoes</h2>
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {getHistoryQuery.data.length > 0 ? (
-                getHistoryQuery.data.map((version: any) => (
+              {(getHistoryQuery.data?.length ?? 0) > 0 ? (
+                getHistoryQuery.data?.map((version: any) => (
                   <div key={version.id} className="p-3 bg-white rounded border text-sm">
                     <div className="flex items-center justify-between">
                       <div>

@@ -190,7 +190,11 @@ export const appRouter = router({
       limit: z.number().default(10),
       offset: z.number().default(0),
       visibility: z.enum(['site', 'intranet', 'both']).optional(),
-    })).query(async ({ input }) => db.listPosts(input)),
+    })).query(async ({ input }) => {
+      const visibility = input.visibility || "site";
+      const status = input.status || "published";
+      return db.listPosts({ ...input, visibility, status });
+    }),
     getBySlug: publicProcedure.input(z.object({ slug: z.string() })).query(async ({ input }) => db.getPostBySlug(input.slug)),
     getById: publicProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => db.getPostById(input.id)),
     search: publicProcedure.input(z.object({ q: z.string(), limit: z.number().default(10) })).query(async ({ input }) => db.searchPosts(input.q, input.limit)),
@@ -514,7 +518,9 @@ export const appRouter = router({
   }),
 
   banners: router({
-    list: publicProcedure.query(async () => db.listBanners()),
+    list: publicProcedure.input(z.object({
+      visibility: z.enum(['site', 'intranet', 'both']).optional(),
+    }).optional()).query(async ({ input }) => db.listBanners({ visibility: input?.visibility || 'site', activeOnly: true })),
     create: editorProcedure.input(z.object({
       title: z.string().min(1),
       imageUrl: z.string().min(1),
@@ -542,7 +548,9 @@ export const appRouter = router({
   }),
 
   videos: router({
-    list: publicProcedure.query(async () => db.listVideos()),
+    list: publicProcedure.input(z.object({
+      visibility: z.enum(['site', 'intranet', 'both']).optional(),
+    }).optional()).query(async ({ input }) => db.listVideos({ visibility: input?.visibility || 'site', activeOnly: true })),
     create: editorProcedure.input(z.object({
       title: z.string().min(1),
       description: z.string().optional(),
@@ -919,8 +927,10 @@ export const appRouter = router({
   }),
 
   documents: router({
-    list: publicProcedure.query(async () => {
-      const docs = await db.getDocumentsWithCategories();
+    list: publicProcedure.input(z.object({
+      visibility: z.enum(['site', 'intranet', 'both']).optional(),
+    }).optional()).query(async ({ input }) => {
+      const docs = await db.getDocumentsWithCategories(input?.visibility || 'site');
       return docs.map((doc: any) => ({
         ...doc,
         document_categories: doc.category
@@ -1440,9 +1450,6 @@ export const appRouter = router({
       endDate: z.date().optional(),
       limit: z.number().default(50),
       offset: z.number().default(0),
-      visibility: z.enum(['site', 'intranet', 'both']).optional(),
-      visibility: z.enum(['site', 'intranet', 'both']).optional(),
-      visibility: z.enum(['site', 'intranet', 'both']).optional(),
       visibility: z.enum(['site', 'intranet', 'both']).optional(),
     })).query(async ({ input }) => {
       return db.getAuditLogs({

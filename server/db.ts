@@ -290,10 +290,13 @@ export async function deletePage(id: number) {
 }
 
 // ==================== BANNERS ====================
-export async function listBanners(activeOnly = false) {
+export async function listBanners(opts: { activeOnly?: boolean; visibility?: string } = {}) {
   const db = await getDb();
   if (!db) return [];
-  const where = activeOnly ? eq(banners.isActive, true) : undefined;
+  const conditions = [];
+  if (opts.activeOnly) conditions.push(eq(banners.isActive, true));
+  if (opts.visibility) conditions.push(inArray(banners.visibility, opts.visibility === "both" ? ["both", "site", "intranet"] : [opts.visibility, "both"]));
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
   return db.select().from(banners).where(where).orderBy(asc(banners.sortOrder));
 }
 
@@ -317,10 +320,13 @@ export async function deleteBanner(id: number) {
 }
 
 // ==================== VIDEOS ====================
-export async function listVideos(activeOnly = false) {
+export async function listVideos(opts: { activeOnly?: boolean; visibility?: string } = {}) {
   const db = await getDb();
   if (!db) return [];
-  const where = activeOnly ? eq(videos.isActive, true) : undefined;
+  const conditions = [];
+  if (opts.activeOnly) conditions.push(eq(videos.isActive, true));
+  if (opts.visibility) conditions.push(inArray(videos.visibility, opts.visibility === "both" ? ["both", "site", "intranet"] : [opts.visibility, "both"]));
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
   return db.select().from(videos).where(where).orderBy(asc(videos.sortOrder));
 }
 
@@ -1077,9 +1083,13 @@ export async function getDocumentById(id: number) {
   return result.length > 0 ? result[0] : null;
 }
 
-export async function getDocumentsWithCategories() {
+export async function getDocumentsWithCategories(visibility?: string) {
   const db = await getDb();
   if (!db) return [];
+  const conditions = [eq(documents.isActive, true), eq(documentCategories.isActive, true)];
+  if (visibility) {
+    conditions.push(inArray(documents.visibility, visibility === "both" ? ["both", "site", "intranet"] : [visibility, "both"]));
+  }
   const results = await db.select({
     ...getTableColumns(documents),
     category: {
@@ -1090,7 +1100,7 @@ export async function getDocumentsWithCategories() {
   })
     .from(documents)
     .innerJoin(documentCategories, eq(documents.categoryId, documentCategories.id))
-    .where(and(eq(documents.isActive, true), eq(documentCategories.isActive, true)))
+    .where(and(...conditions))
     .orderBy(asc(documentCategories.sortOrder), desc(documents.createdAt));
   return results;
 }

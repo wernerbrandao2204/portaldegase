@@ -8,7 +8,7 @@ import { LoginBar } from "@/components/LoginBar";
 import { trpc } from "@/lib/trpc";
 
 function BannerSection() {
-  const { data: banners } = trpc.banners.list.useQuery();
+  const { data: banners } = trpc.banners.list.useQuery({ visibility: "site" });
   const [currentBanner, setCurrentBanner] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
 
@@ -110,7 +110,7 @@ function BannerSection() {
 }
 
 function NewsSection() {
-  const { data, isLoading } = trpc.posts.list.useQuery({ status: "published", limit: 5 });
+  const { data, isLoading } = trpc.posts.list.useQuery({ status: "published", limit: 5, visibility: "site" });
   const newsItems = data?.items ?? [];
 
   // Placeholder news if no data
@@ -204,7 +204,7 @@ function NewsSection() {
 
 
 function VideosSection() {
-  const { data: videos } = trpc.videos.list.useQuery();
+  const { data: videos } = trpc.videos.list.useQuery({ visibility: "site" });
   const featuredVideo = videos?.find((v: any) => v.isFeatured) || videos?.[0];
 
   const getYoutubeEmbedUrl = (url: string) => {
