@@ -1,5 +1,4 @@
 import { FileText, Download, TrendingUp, Clock } from "lucide-react";
-import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 
 export default function RecentDocumentsWidget() {
@@ -50,11 +49,12 @@ export default function RecentDocumentsWidget() {
                 </div>
               </div>
             ))}
-            <Link href="/admin/documents">
+            {/* ✅ Usando <a> com caminho absoluto para evitar conflito /degase/degase/ */}
+            <a href="https://www.rj.gov.br/degase/admin/documentos">
               <button className="w-full mt-4 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50">
                 Ver todos os documentos
               </button>
-            </Link>
+            </a>
           </div>
         ) : (
           <div className="text-center py-8">
@@ -95,11 +95,12 @@ export default function RecentDocumentsWidget() {
                 </div>
               </div>
             ))}
-            <Link href="/admin/documents/stats">
+            {/* ✅ Usando <a> com caminho absoluto para evitar conflito /degase/degase/ */}
+            <a href="https://www.rj.gov.br/degase/admin/documentos/estatisticas">
               <button className="w-full mt-4 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50">
                 Ver estatísticas completas
               </button>
-            </Link>
+            </a>
           </div>
         ) : (
           <div className="text-center py-8">

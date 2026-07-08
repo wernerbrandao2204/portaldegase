@@ -1,11 +1,9 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Shield, Mail, Lock, AlertCircle } from "lucide-react";
 
 export default function AdminLogin() {
-  const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,8 +28,8 @@ export default function AdminLogin() {
         return;
       }
 
-      // Login bem-sucedido, redirecionar para o admin
-      setLocation("/admin");
+      // ✅ Login bem-sucedido, redirecionar para o admin usando caminho absoluto
+      window.location.href = "https://www.rj.gov.br/degase/admin";
     } catch (err) {
       setError("Erro ao conectar ao servidor");
     } finally {
@@ -154,7 +152,8 @@ export default function AdminLogin() {
 
         {/* Back Link */}
         <div className="mt-6 text-center">
-          <a href="/" className="text-sm hover:underline" style={{ color: "var(--degase-blue-light)" }}>
+          {/* ✅ Usando caminho absoluto para voltar ao site */}
+          <a href="https://www.rj.gov.br/degase/" className="text-sm hover:underline" style={{ color: "var(--degase-blue-light)" }}>
             ← Voltar ao site
           </a>
         </div>

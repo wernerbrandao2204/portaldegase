@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, Download, FileText, BarChart3, Star, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
-import { Link } from "wouter";
 
 export default function AdminDocuments() {
   const [showForm, setShowForm] = useState(false);
@@ -202,11 +201,12 @@ export default function AdminDocuments() {
           />
         </div>
         <div className="flex gap-2">
-          <Link href="/admin/documentos/estatisticas">
+          {/* ✅ Usando <a> com caminho absoluto para evitar conflito /degase/degase/ */}
+          <a href="https://www.rj.gov.br/degase/admin/documentos/estatisticas">
             <Button variant="outline" style={{ borderColor: "var(--degase-blue-dark)", color: "var(--degase-blue-dark)" }}>
               <BarChart3 size={16} className="mr-1" /> Estatísticas
             </Button>
-          </Link>
+          </a>
           <Button onClick={() => setShowCategoryForm(true)} variant="outline" style={{ borderColor: "var(--degase-blue-dark)", color: "var(--degase-blue-dark)" }}>
             <Plus size={16} className="mr-1" /> Nova Categoria
           </Button>
@@ -381,102 +381,145 @@ export default function AdminDocuments() {
               className="w-full px-3 py-2 border rounded-md mb-4"
               placeholder="Nome do documento"
             />
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => setEditingDocId(null)}
-                className="px-4 py-2 border rounded-md hover:bg-gray-100"
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditingDocId(null);
+                  setEditingDocName("");
+                }}
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   if (editingDocName.trim()) {
-                    updateDocumentNameMutation.mutate({ id: editingDocId, name: editingDocName });
-                  } else {
-                    toast.error("Nome não pode estar vazio");
+                    updateDocumentNameMutation.mutate({
+                      id: editingDocId,
+                      name: editingDocName,
+                    });
                   }
                 }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                style={{ backgroundColor: "var(--degase-blue-dark)" }}
               >
                 Salvar
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {documentsLoading ? (
-        <p className="text-gray-500">Carregando documentos...</p>
-      ) : Object.keys(documentsByCategory).length > 0 ? (
-        <div className="space-y-6">
-          {Object.values(documentsByCategory).map((group: any) => (
-            <div key={group.category.id} className="bg-white rounded-lg border p-5">
-              <h2 className="text-lg font-bold mb-4" style={{ color: "var(--degase-blue-dark)" }}>
-                {group.category.name}
-              </h2>
-              {group.category.description && (
-                <p className="text-sm text-gray-600 mb-4">{group.category.description}</p>
-              )}
-              <div className="space-y-2">
-                {group.documents.map((doc: any) => (
-                  <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-                    <div className="flex items-center gap-3 flex-1">
-                      <FileText size={20} className="text-blue-500" />
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{doc.name}</p>
-                        <p className="text-xs text-gray-500">{formatFileSize(doc.fileSize)}</p>
+      <div className="space-y-6">
+        {Object.values(documentsByCategory).map(({ category, documents }: any) => (
+          <div key={category.id} className="bg-white rounded-lg border overflow-hidden">
+            <div className="bg-gray-50 px-4 py-3 border-b flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-gray-900">{category.name}</h3>
+                {category.description && <p className="text-xs text-gray-500">{category.description}</p>}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => {
+                  if (confirm("Tem certeza que deseja deletar esta categoria? Todos os documentos nela serão mantidos, mas sem categoria.")) {
+                    deleteCategoryMutation.mutate(category.id);
+                  }
+                }}
+              >
+                <Trash2 size={14} />
+              </Button>
+            </div>
+            <div className="divide-y">
+              {documents.map((doc: any) => (
+                <div key={doc.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded bg-blue-50 flex items-center justify-center text-blue-600">
+                      <FileText size={20} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm text-gray-900">{doc.name}</p>
+                        {doc.isFeatured && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-800">
+                            Destaque
+                          </span>
+                        )}
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${
+                          doc.visibility === 'intranet' ? 'bg-purple-100 text-purple-800' : 
+                          doc.visibility === 'both' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {doc.visibility === 'intranet' ? 'Intranet' : doc.visibility === 'both' ? 'Site/Intranet' : 'Site'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1">
+                        <p className="text-xs text-gray-500">{formatFileSize(doc.fileSize || 0)}</p>
+                        <p className="text-xs text-gray-500">•</p>
+                        <p className="text-xs text-gray-500">{new Date(doc.createdAt).toLocaleDateString()}</p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => { setEditingDocId(doc.id); setEditingDocName(doc.name); }}
-                        className="p-1.5 hover:bg-gray-200 rounded text-gray-600"
-                        title="Editar nome"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => toggleFeaturedMutation.mutate({ id: doc.id, isFeatured: !doc.isFeatured })}
-                        className={`p-1.5 rounded transition-colors ${doc.isFeatured ? "bg-yellow-100 text-yellow-600" : "hover:bg-yellow-100 text-gray-400 hover:text-yellow-600"}`}
-                        title={doc.isFeatured ? "Remover de destaque" : "Adicionar a destaque"}
-                      >
-                        <Star size={16} fill={doc.isFeatured ? "currentColor" : "none"} />
-                      </button>
-                      <a href={doc.fileUrl} download className="p-1.5 hover:bg-blue-100 rounded text-blue-600">
-                        <Download size={16} />
-                      </a>
-                      <button onClick={() => { if (confirm("Deletar?")) deleteDocumentMutation.mutate({ id: doc.id }); }} className="p-1.5 hover:bg-red-100 rounded text-red-600">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-gray-500">Nenhum documento enviado ainda.</p>
-      )}
-
-      {categories && categories.length > 0 && (
-        <div className="mt-8 bg-white p-5 rounded-lg border">
-          <h3 className="font-bold mb-4">Categorias de Documentos</h3>
-          <div className="space-y-2">
-            {categories.map((cat: any) => (
-              <div key={cat.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-                <div>
-                  <p className="font-medium text-sm">{cat.name}</p>
-                  {cat.description && <p className="text-xs text-gray-500">{cat.description}</p>}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleFeaturedMutation.mutate({ id: doc.id, featured: !doc.isFeatured })}
+                      className={doc.isFeatured ? "text-yellow-600" : "text-gray-400"}
+                    >
+                      <Star size={16} fill={doc.isFeatured ? "currentColor" : "none"} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingDocId(doc.id);
+                        setEditingDocName(doc.name);
+                      }}
+                    >
+                      <Edit size={16} />
+                    </Button>
+                    <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
+                      <Button variant="ghost" size="sm">
+                        <Download size={16} />
+                      </Button>
+                    </a>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => {
+                        if (confirm("Tem certeza que deseja deletar este documento?")) {
+                          deleteDocumentMutation.mutate(doc.id);
+                        }
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
                 </div>
-                <button onClick={() => { if (confirm("Deletar?")) deleteCategoryMutation.mutate({ id: cat.id }); }} className="p-1.5 hover:bg-red-100 rounded text-red-600">
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))}
+              ))}
+              {documents.length === 0 && (
+                <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                  Nenhum documento nesta categoria.
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        ))}
+
+        {filteredDocuments.length === 0 && (
+          <div className="bg-white rounded-lg border p-12 text-center">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FileText size={32} className="text-gray-300" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900">Nenhum documento encontrado</h3>
+            <p className="text-gray-500 mt-1">Tente ajustar sua busca ou adicione um novo documento.</p>
+            <Button onClick={() => setShowForm(true)} className="mt-6" style={{ backgroundColor: "var(--degase-blue-dark)" }}>
+              <Plus size={16} className="mr-2" /> Novo Documento
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

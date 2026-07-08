@@ -185,9 +185,10 @@ export default function SiteHeader() {
             />
             {isAuthenticated && (
               <div className="border-t border-white/20 mt-4 pt-4">
-                <Link href="/admin" onClick={() => setMenuOpen(false)} className="block px-4 py-2 hover:bg-white/10 rounded-md transition-colors font-medium">
+                {/* ✅ Usando <a> com caminho absoluto para o painel admin */}
+                <a href="https://www.rj.gov.br/degase/admin" onClick={() => setMenuOpen(false)} className="block px-4 py-2 hover:bg-white/10 rounded-md transition-colors font-medium">
                   Painel Administrativo
-                </Link>
+                </a>
               </div>
             )}
           </div>
